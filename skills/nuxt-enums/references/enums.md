@@ -32,35 +32,32 @@ instance.value  // string
 ## Complete Enum Example
 
 ```typescript
-// app/enums/LeadStatus.ts
+// app/enums/PostStatus.ts
 import Enum from '#layers/base/app/enums/Enum'
 import type { Castable, EnumStoreObject } from '#layers/base/app/types'
 
-export default class LeadStatus extends Enum implements Castable {
+export default class PostStatus extends Enum implements Castable {
   // Define all possible values
-  static readonly NewLead = LeadStatus.create('new lead')
-  static readonly LinkSent = LeadStatus.create('link sent')
-  static readonly TranscriptReceived = LeadStatus.create('transcript received')
-  static readonly Completed = LeadStatus.create('completed')
-  static readonly Cancelled = LeadStatus.create('cancelled')
+  static readonly Draft = PostStatus.create('draft')
+  static readonly PendingReview = PostStatus.create('pending review')
+  static readonly Published = PostStatus.create('published')
+  static readonly Archived = PostStatus.create('archived')
 
   // Required for model casting
-  static cast(value: string | EnumStoreObject): LeadStatus {
-    return LeadStatus.coerce(value)
+  static cast(value: string | EnumStoreObject): PostStatus {
+    return PostStatus.coerce(value)
   }
 
   // UI color mapping
   color(): string {
     switch (this.value) {
-      case 'new lead':
-        return 'primary'
-      case 'link sent':
-        return 'info'
-      case 'transcript received':
+      case 'draft':
+        return 'neutral'
+      case 'pending review':
         return 'warning'
-      case 'completed':
+      case 'published':
         return 'success'
-      case 'cancelled':
+      case 'archived':
         return 'error'
       default:
         return 'neutral'
@@ -75,28 +72,26 @@ export default class LeadStatus extends Enum implements Castable {
   // Custom display text (if different from value)
   get label(): string {
     switch (this.value) {
-      case 'new lead':
-        return 'New Lead'
-      case 'link sent':
-        return 'Link Sent'
-      case 'transcript received':
-        return 'Transcript Received'
-      case 'completed':
-        return 'Completed'
-      case 'cancelled':
-        return 'Cancelled'
+      case 'draft':
+        return 'Draft'
+      case 'pending review':
+        return 'Pending Review'
+      case 'published':
+        return 'Published'
+      case 'archived':
+        return 'Archived'
       default:
         return this.value
     }
   }
 
   // Boolean helpers
-  isActive(): boolean {
-    return !this.is(LeadStatus.Completed) && !this.is(LeadStatus.Cancelled)
+  isEditable(): boolean {
+    return this.is(PostStatus.Draft) || this.is(PostStatus.PendingReview)
   }
 
-  isTerminal(): boolean {
-    return this.is(LeadStatus.Completed) || this.is(LeadStatus.Cancelled)
+  isPublic(): boolean {
+    return this.is(PostStatus.Published)
   }
 }
 ```
@@ -110,10 +105,10 @@ Enums implement `Castable` for model integration:
 ```typescript
 import type { Castable } from '#layers/base/app/types'
 
-class LeadStatus extends Enum implements Castable {
+class PostStatus extends Enum implements Castable {
   // Static cast method - called by model hydration
-  static cast(value: string | EnumStoreObject): LeadStatus {
-    return LeadStatus.coerce(value)
+  static cast(value: string | EnumStoreObject): PostStatus {
+    return PostStatus.coerce(value)
   }
 }
 ```
@@ -121,14 +116,14 @@ class LeadStatus extends Enum implements Castable {
 ### In Models
 
 ```typescript
-import LeadStatus from '~/enums/LeadStatus'
+import PostStatus from '~/enums/PostStatus'
 
-class Lead extends Model {
-  status: LeadStatus
+class Post extends Model {
+  status: PostStatus
 
   public override casts(): Record<string, Castable> {
     return {
-      status: LeadStatus,  // Auto-casts string → LeadStatus
+      status: PostStatus,  // Auto-casts string → PostStatus
     }
   }
 }
@@ -179,15 +174,15 @@ Add semantic checks:
 
 ```typescript
 isPending(): boolean {
-  return this.is(EvaluationStatus.Pending)
+  return this.is(TaskStatus.Pending)
 }
 
 isCompleted(): boolean {
-  return this.is(EvaluationStatus.Completed)
+  return this.is(TaskStatus.Completed)
 }
 
 canBeEdited(): boolean {
-  return this.is(EvaluationStatus.Pending) || this.is(EvaluationStatus.InProgress)
+  return this.is(TaskStatus.Pending) || this.is(TaskStatus.InProgress)
 }
 ```
 
@@ -198,17 +193,17 @@ canBeEdited(): boolean {
 ### Badge Display
 
 ```vue
-<UBadge :color="lead.status.color()">
-  {{ lead.status.text }}
+<UBadge :color="post.status.color()">
+  {{ post.status.text }}
 </UBadge>
 ```
 
 ### With Icon
 
 ```vue
-<UBadge :color="lead.status.color()">
-  <UIcon :name="lead.status.icon()" class="mr-1" />
-  {{ lead.status.label }}
+<UBadge :color="post.status.color()">
+  <UIcon :name="post.status.icon()" class="mr-1" />
+  {{ post.status.label }}
 </UBadge>
 ```
 
@@ -216,15 +211,15 @@ canBeEdited(): boolean {
 
 ```vue
 <template>
-  <div v-if="lead.status.isActive()">
-    <!-- Show active lead UI -->
+  <div v-if="post.status.isEditable()">
+    <!-- Show editable UI -->
   </div>
 
   <UButton
-    v-if="!lead.status.isTerminal()"
-    @click="markComplete"
+    v-if="post.status.isEditable()"
+    @click="publish"
   >
-    Complete
+    Publish
   </UButton>
 </template>
 ```
@@ -239,10 +234,10 @@ canBeEdited(): boolean {
 />
 
 <script setup>
-import LeadStatus from '~/enums/LeadStatus'
+import PostStatus from '~/enums/PostStatus'
 
 const statusOptions = computed(() =>
-  LeadStatus.values().map(status => ({
+  PostStatus.values().map(status => ({
     value: status.value,
     label: status.label,
   }))
@@ -258,8 +253,8 @@ const statusOptions = computed(() =>
 
 ```typescript
 // Check if enum matches specific value
-if (lead.status.is(LeadStatus.Completed)) {
-  // Handle completed lead
+if (post.status.is(PostStatus.Published)) {
+  // Handle published post
 }
 ```
 
@@ -267,14 +262,14 @@ if (lead.status.is(LeadStatus.Completed)) {
 
 ```typescript
 // Check if enum is one of several values
-const activeStatuses = [LeadStatus.NewLead, LeadStatus.LinkSent]
-if (activeStatuses.some(s => lead.status.is(s))) {
-  // Handle active lead
+const editableStatuses = [PostStatus.Draft, PostStatus.PendingReview]
+if (editableStatuses.some(s => post.status.is(s))) {
+  // Handle editable post
 }
 
 // Or add helper method
-isActive(): boolean {
-  return [LeadStatus.NewLead, LeadStatus.LinkSent].some(s => this.is(s))
+isEditable(): boolean {
+  return [PostStatus.Draft, PostStatus.PendingReview].some(s => this.is(s))
 }
 ```
 
@@ -286,36 +281,35 @@ isActive(): boolean {
 
 ```typescript
 // Returns array of all defined enum instances
-const allStatuses = LeadStatus.values()
-// [NewLead, LinkSent, TranscriptReceived, Completed, Cancelled]
+const allStatuses = PostStatus.values()
+// [Draft, PendingReview, Published, Archived]
 ```
 
 ### Find by Value
 
 ```typescript
 // Coerce string back to enum instance
-const status = LeadStatus.coerce('completed')
-status.is(LeadStatus.Completed)  // true
+const status = PostStatus.coerce('published')
+status.is(PostStatus.Published)  // true
 ```
 
 ---
 
 ## More Enum Examples
 
-### EvaluationStatus
+### TaskStatus
 
 ```typescript
-// app/enums/EvaluationStatus.ts
-export default class EvaluationStatus extends Enum implements Castable {
-  static readonly Pending = EvaluationStatus.create('pending')
-  static readonly Scheduled = EvaluationStatus.create('scheduled')
-  static readonly InProgress = EvaluationStatus.create('in_progress')
-  static readonly Completed = EvaluationStatus.create('completed')
-  static readonly Failed = EvaluationStatus.create('failed')
-  static readonly Reviewed = EvaluationStatus.create('reviewed')
+// app/enums/TaskStatus.ts
+export default class TaskStatus extends Enum implements Castable {
+  static readonly Pending = TaskStatus.create('pending')
+  static readonly Scheduled = TaskStatus.create('scheduled')
+  static readonly InProgress = TaskStatus.create('in_progress')
+  static readonly Completed = TaskStatus.create('completed')
+  static readonly Failed = TaskStatus.create('failed')
 
-  static cast(value: string): EvaluationStatus {
-    return EvaluationStatus.coerce(value)
+  static cast(value: string): TaskStatus {
+    return TaskStatus.coerce(value)
   }
 
   color(): string {
@@ -325,25 +319,24 @@ export default class EvaluationStatus extends Enum implements Castable {
       case 'in_progress': return 'primary'
       case 'completed': return 'success'
       case 'failed': return 'error'
-      case 'reviewed': return 'success'
       default: return 'neutral'
     }
   }
 }
 ```
 
-### SecureLinkStatus
+### NotificationStatus
 
 ```typescript
-// app/enums/SecureLinkStatus.ts
-export default class SecureLinkStatus extends Enum implements Castable {
-  static readonly Pending = SecureLinkStatus.create('pending')
-  static readonly Sent = SecureLinkStatus.create('sent')
-  static readonly Delivered = SecureLinkStatus.create('delivered')
-  static readonly Bounced = SecureLinkStatus.create('bounced')
+// app/enums/NotificationStatus.ts
+export default class NotificationStatus extends Enum implements Castable {
+  static readonly Pending = NotificationStatus.create('pending')
+  static readonly Sent = NotificationStatus.create('sent')
+  static readonly Delivered = NotificationStatus.create('delivered')
+  static readonly Failed = NotificationStatus.create('failed')
 
-  static cast(value: string): SecureLinkStatus {
-    return SecureLinkStatus.coerce(value)
+  static cast(value: string): NotificationStatus {
+    return NotificationStatus.coerce(value)
   }
 
   color(): string {
@@ -351,13 +344,13 @@ export default class SecureLinkStatus extends Enum implements Castable {
       case 'pending': return 'warning'
       case 'sent': return 'info'
       case 'delivered': return 'success'
-      case 'bounced': return 'error'
+      case 'failed': return 'error'
       default: return 'neutral'
     }
   }
 
   wasSent(): boolean {
-    return !this.is(SecureLinkStatus.Pending)
+    return !this.is(NotificationStatus.Pending)
   }
 }
 ```
@@ -369,10 +362,10 @@ export default class SecureLinkStatus extends Enum implements Castable {
 ```
 app/
 └── enums/
-    ├── LeadStatus.ts
-    ├── EvaluationStatus.ts
-    ├── EvaluationReviewStatus.ts
-    └── SecureLinkStatus.ts
+    ├── PostStatus.ts
+    ├── TaskStatus.ts
+    ├── CommentStatus.ts
+    └── NotificationStatus.ts
 ```
 
 ---
@@ -381,10 +374,10 @@ app/
 
 | Convention | Example |
 |------------|---------|
-| File name | PascalCase: `LeadStatus.ts` |
-| Class name | PascalCase: `LeadStatus` |
-| Static values | PascalCase: `NewLead`, `InProgress` |
-| String values | lowercase/snake: `'new lead'`, `'in_progress'` |
+| File name | PascalCase: `PostStatus.ts` |
+| Class name | PascalCase: `PostStatus` |
+| Static values | PascalCase: `Draft`, `InProgress` |
+| String values | lowercase/snake: `'draft'`, `'in_progress'` |
 
 ---
 

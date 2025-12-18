@@ -99,8 +99,8 @@ Base layer expects these in your `app.config.ts`:
 export default defineAppConfig({
   // Repository registration
   repositories: {
-    leads: LeadRepository,
-    contacts: ContactRepository,
+    posts: PostRepository,
+    authors: AuthorRepository,
   },
 
   // HTTP interceptors
@@ -139,8 +139,8 @@ Environment variable mapping:
 
 ```bash
 # Per-repository API base URLs
-NUXT_PUBLIC_REPOSITORIES_LEADS_FETCH_OPTIONS_BASE_URL=https://api.example.com
-NUXT_PUBLIC_REPOSITORIES_CONTACTS_FETCH_OPTIONS_BASE_URL=https://api.example.com
+NUXT_PUBLIC_REPOSITORIES_POSTS_FETCH_OPTIONS_BASE_URL=https://api.example.com
+NUXT_PUBLIC_REPOSITORIES_AUTHORS_FETCH_OPTIONS_BASE_URL=https://api.example.com
 
 # Global settings
 NUXT_PUBLIC_APP_URL=https://app.example.com
@@ -173,7 +173,7 @@ UI primitives built on Nuxt UI Pro.
 const { open, close } = useModal('my-modal')
 
 // Open with props
-open({ title: 'Confirm Delete', item: lead })
+open({ title: 'Confirm Delete', item: post })
 
 // In component
 const modal = useModal('my-modal')
@@ -185,12 +185,12 @@ watch(modal.isOpen, (open) => {
 ### Slideover Usage
 
 ```typescript
-const { open: openCreate } = useSlideover('create-lead')
-const { open: openEdit } = useSlideover('edit-lead')
+const { open: openCreate } = useSlideover('create-post')
+const { open: openEdit } = useSlideover('edit-post')
 
 // Open slideover
 openCreate()
-openEdit({ lead: selectedLead })
+openEdit({ post: selectedPost })
 ```
 
 ### Confirmation Toast
@@ -199,12 +199,12 @@ openEdit({ lead: selectedLead })
 const { trigger } = useConfirmationToast()
 
 trigger({
-  title: 'Delete Lead?',
+  title: 'Delete Post?',
   description: 'This action cannot be undone.',
   confirmLabel: 'Delete',
   cancelLabel: 'Cancel',
   onConfirm: async () => {
-    await deleteLeadAction(lead)
+    await deletePostAction(post)
   },
 })
 ```
@@ -224,7 +224,7 @@ trigger({
 
 ## X-UI Layer (`/nuxt-layers/x-ui`)
 
-Extended UI components for Fabric applications.
+Extended UI components for applications.
 
 ### Components
 
@@ -243,7 +243,7 @@ Extended UI components for Fabric applications.
 
 ```vue
 <XTable
-  :data="leads"
+  :data="posts"
   :columns="columns"
   :loading="isLoading"
   :fetching="isFetching"
@@ -258,10 +258,10 @@ Extended UI components for Fabric applications.
 ```vue
 <XForm
   ref="formRef"
-  url="/lead-management/leads"
+  url="/api/posts"
   method="POST"
   :data="formData"
-  :waiting="waitingFor.leads.creating"
+  :waiting="waitingFor.posts.creating"
   @submit="onSubmit"
   @success="onSuccess"
   @error="onError"
@@ -371,7 +371,7 @@ All composables are auto-imported:
 
 ```typescript
 // No import needed - auto-imported from layers
-const leadApi = useRepository('leads')
+const postApi = useRepository('posts')
 const { start, stop, waitingFor } = useWait()
 const flash = useFlash()
 const { can, cannot } = usePermissions()

@@ -58,33 +58,33 @@ jsonDelete(url: string): Promise<void>
 ## Complete Repository Example
 
 ```typescript
-// app/repositories/LeadRepository.ts
+// app/repositories/PostRepository.ts
 import { BaseRepository } from '#layers/base/app/repositories/base-repository'
 import { ModelHydrator } from '#layers/base/app/repositories/hydrators/model-hydrator'
-import Lead from '~/models/Lead'
+import Post from '~/models/Post'
 import type { CollectionResponse, DataResponse, GenericQueryParams, OutgoingQueryParams } from '#layers/base/app/types'
 
-export default class LeadRepository extends BaseRepository<Lead> {
+export default class PostRepository extends BaseRepository<Post> {
   // API resource path
-  protected resource = '/lead-management/leads'
+  protected resource = '/api/posts'
 
   // Enable automatic model hydration
   protected hydration = true
-  protected hydrator = new ModelHydrator(Lead)
+  protected hydrator = new ModelHydrator(Post)
 
-  // Custom: List leads by contact
-  async listByContact(
-    contactUlid: string,
+  // Custom: List posts by author
+  async listByAuthor(
+    authorUlid: string,
     params?: GenericQueryParams & OutgoingQueryParams
-  ): Promise<CollectionResponse<Lead>> {
-    return this.jsonGet(`/lead-management/contacts/${contactUlid}/leads`, params)
+  ): Promise<CollectionResponse<Post>> {
+    return this.jsonGet(`/api/authors/${authorUlid}/posts`, params)
   }
 
-  // Custom: Update lead status
+  // Custom: Update post status
   async updateStatus(
     ulid: string,
     status: string
-  ): Promise<DataResponse<Lead>> {
+  ): Promise<DataResponse<Post>> {
     return this.jsonPatch(`${this.resource}/${ulid}/status`, { status })
   }
 }
@@ -98,11 +98,11 @@ export default class LeadRepository extends BaseRepository<Lead> {
 
 ```typescript
 import { ModelHydrator } from '#layers/base/app/repositories/hydrators/model-hydrator'
-import Lead from '~/models/Lead'
+import Post from '~/models/Post'
 
-class LeadRepository extends BaseRepository<Lead> {
+class PostRepository extends BaseRepository<Post> {
   protected hydration = true
-  protected hydrator = new ModelHydrator(Lead)
+  protected hydrator = new ModelHydrator(Post)
 }
 ```
 
@@ -117,15 +117,15 @@ class LeadRepository extends BaseRepository<Lead> {
 ### Hydration Control
 
 ```typescript
-const leadApi = useRepository('leads')
+const postApi = useRepository('posts')
 
 // Temporarily disable hydration
-const rawData = await leadApi.withoutHydration(async (repo) => {
+const rawData = await postApi.withoutHydration(async (repo) => {
   return repo.list()  // Returns raw API response
 })
 
 // Ensure hydration (even if normally disabled)
-const models = await leadApi.withHydration(async (repo) => {
+const models = await postApi.withHydration(async (repo) => {
   return repo.list()  // Returns hydrated models
 })
 ```
@@ -138,15 +138,15 @@ const models = await leadApi.withHydration(async (repo) => {
 
 ```typescript
 // app/app.config.ts
-import LeadRepository from '~/repositories/LeadRepository'
-import ContactRepository from '~/repositories/ContactRepository'
-import SecureLinkRepository from '~/repositories/SecureLinkRepository'
+import PostRepository from '~/repositories/PostRepository'
+import AuthorRepository from '~/repositories/AuthorRepository'
+import CommentRepository from '~/repositories/CommentRepository'
 
 export default defineAppConfig({
   repositories: {
-    leads: LeadRepository,
-    contacts: ContactRepository,
-    secureLinks: SecureLinkRepository,
+    posts: PostRepository,
+    authors: AuthorRepository,
+    comments: CommentRepository,
   },
 })
 ```
@@ -157,7 +157,7 @@ export default defineAppConfig({
 export default defineAppConfig({
   repositories: {
     // Simple format (uses global apiUrl)
-    leads: LeadRepository,
+    posts: PostRepository,
 
     // Extended format with custom options
     externalService: {
@@ -178,8 +178,8 @@ export default defineAppConfig({
 
 ```bash
 # Override specific repository base URLs
-NUXT_PUBLIC_REPOSITORIES_LEADS_FETCH_OPTIONS_BASE_URL=https://api.example.com
-NUXT_PUBLIC_REPOSITORIES_CONTACTS_FETCH_OPTIONS_BASE_URL=https://contacts-api.example.com
+NUXT_PUBLIC_REPOSITORIES_POSTS_FETCH_OPTIONS_BASE_URL=https://api.example.com
+NUXT_PUBLIC_REPOSITORIES_AUTHORS_FETCH_OPTIONS_BASE_URL=https://authors-api.example.com
 ```
 
 ---
@@ -190,54 +190,54 @@ NUXT_PUBLIC_REPOSITORIES_CONTACTS_FETCH_OPTIONS_BASE_URL=https://contacts-api.ex
 
 ```typescript
 // Get typed repository instance
-const leadApi = useRepository('leads')  // Returns LeadRepository
+const postApi = useRepository('posts')  // Returns PostRepository
 
 // List all
-const { data: leads } = await leadApi.list()
+const { data: posts } = await postApi.list()
 
 // Get single
-const { data: lead } = await leadApi.get('ulid123')
+const { data: post } = await postApi.get('ulid123')
 
 // Create
-const { data: newLead } = await leadApi.create({
-  name: 'John Doe',
-  email: 'john@example.com',
+const { data: newPost } = await postApi.create({
+  title: 'Hello World',
+  content: 'My first post',
 })
 
 // Update
-const { data: updated } = await leadApi.update('ulid123', {
-  name: 'Jane Doe',
+const { data: updated } = await postApi.update('ulid123', {
+  title: 'Updated Title',
 })
 
 // Delete
-await leadApi.delete('ulid123')
+await postApi.delete('ulid123')
 ```
 
 ### With Query Parameters
 
 ```typescript
 // Include relations
-const { data: leads } = await leadApi.list({
-  include: 'contact,secure-links',
+const { data: posts } = await postApi.list({
+  include: 'author,comments',
 })
 
 // With filters
-const { data: leads } = await leadApi.list({
+const { data: posts } = await postApi.list({
   filter: {
-    status: 'new lead',
-    'test-flag': false,
+    status: 'published',
+    'is-draft': false,
   },
 })
 
 // Pagination
-const { data: leads } = await leadApi.list({
+const { data: posts } = await postApi.list({
   page: { number: 1, size: 25 },
 })
 
 // Combined
-const { data: leads } = await leadApi.list({
-  include: 'contact',
-  filter: { status: 'new lead' },
+const { data: posts } = await postApi.list({
+  include: 'author',
+  filter: { status: 'published' },
   page: { number: 1, size: 25 },
 })
 ```
@@ -245,33 +245,33 @@ const { data: leads } = await leadApi.list({
 ### Custom Methods
 
 ```typescript
-const leadApi = useRepository('leads')
+const postApi = useRepository('posts')
 
 // Use custom method
-const { data: contactLeads } = await leadApi.listByContact('contact-ulid')
+const { data: authorPosts } = await postApi.listByAuthor('author-ulid')
 
-const secureLinkApi = useRepository('secureLinks')
-const { data: link } = await secureLinkApi.createForLead('lead-ulid')
+const commentApi = useRepository('comments')
+const { data: comment } = await commentApi.createForPost('post-ulid', { content: 'Great post!' })
 ```
 
 ---
 
 ## More Repository Examples
 
-### ContactRepository
+### AuthorRepository
 
 ```typescript
-// app/repositories/ContactRepository.ts
+// app/repositories/AuthorRepository.ts
 import { BaseRepository } from '#layers/base/app/repositories/base-repository'
 import { ModelHydrator } from '#layers/base/app/repositories/hydrators/model-hydrator'
-import Contact from '~/models/Contact'
+import Author from '~/models/Author'
 
-export default class ContactRepository extends BaseRepository<Contact> {
-  protected resource = '/lead-management/contacts'
+export default class AuthorRepository extends BaseRepository<Author> {
+  protected resource = '/api/authors'
   protected hydration = true
-  protected hydrator = new ModelHydrator(Contact)
+  protected hydrator = new ModelHydrator(Author)
 
-  // Search contacts by term
+  // Search authors by term
   async search(searchTerm: string) {
     return this.jsonGet(`${this.resource}/search`, {
       filter: { search: searchTerm },
@@ -280,43 +280,43 @@ export default class ContactRepository extends BaseRepository<Contact> {
 }
 ```
 
-### SecureLinkRepository
+### CommentRepository
 
 ```typescript
-// app/repositories/SecureLinkRepository.ts
+// app/repositories/CommentRepository.ts
 import { BaseRepository } from '#layers/base/app/repositories/base-repository'
 import { ModelHydrator } from '#layers/base/app/repositories/hydrators/model-hydrator'
-import SecureLink from '~/models/SecureLink'
+import Comment from '~/models/Comment'
 
-export default class SecureLinkRepository extends BaseRepository<SecureLink> {
-  protected resource = '/lead-management/secure-links'
+export default class CommentRepository extends BaseRepository<Comment> {
+  protected resource = '/api/comments'
   protected hydration = true
-  protected hydrator = new ModelHydrator(SecureLink)
+  protected hydrator = new ModelHydrator(Comment)
 
-  // Create secure link for a lead
-  async createForLead(leadUlid: string) {
-    return this.jsonPost(`/lead-management/leads/${leadUlid}/secure-links`)
+  // Create comment for a post
+  async createForPost(postUlid: string, data: { content: string }) {
+    return this.jsonPost(`/api/posts/${postUlid}/comments`, data)
   }
 
-  // Resend secure link
-  async resend(secureLink: SecureLink) {
-    return this.jsonPost(`${this.resource}/${secureLink.ulid}/resend`)
+  // Approve comment
+  async approve(comment: Comment) {
+    return this.jsonPost(`${this.resource}/${comment.ulid}/approve`)
   }
 }
 ```
 
-### EvaluationRepository
+### TagRepository
 
 ```typescript
-// app/repositories/EvaluationRepository.ts
+// app/repositories/TagRepository.ts
 import { BaseRepository } from '#layers/base/app/repositories/base-repository'
 import { ModelHydrator } from '#layers/base/app/repositories/hydrators/model-hydrator'
-import Evaluation from '~/models/Evaluation'
+import Tag from '~/models/Tag'
 
-export default class EvaluationRepository extends BaseRepository<Evaluation> {
-  protected resource = '/evaluations'
+export default class TagRepository extends BaseRepository<Tag> {
+  protected resource = '/api/tags'
   protected hydration = true
-  protected hydrator = new ModelHydrator(Evaluation)
+  protected hydrator = new ModelHydrator(Tag)
 
   // No custom methods - uses standard CRUD
 }
@@ -335,8 +335,8 @@ interface DataResponse<T> {
   data: T
 }
 
-const { data: lead } = await leadApi.get('ulid')
-// lead is typed as Lead
+const { data: post } = await postApi.get('ulid')
+// post is typed as Post
 ```
 
 ### CollectionResponse
@@ -348,8 +348,8 @@ interface CollectionResponse<T> {
   data: T[]
 }
 
-const { data: leads } = await leadApi.list()
-// leads is typed as Lead[]
+const { data: posts } = await postApi.list()
+// posts is typed as Post[]
 ```
 
 ### PaginatedResponse
@@ -383,10 +383,10 @@ interface PaginatedResponse<T> {
 ```
 app/
 └── repositories/
-    ├── LeadRepository.ts
-    ├── ContactRepository.ts
-    ├── SecureLinkRepository.ts
-    └── EvaluationRepository.ts
+    ├── PostRepository.ts
+    ├── AuthorRepository.ts
+    ├── CommentRepository.ts
+    └── TagRepository.ts
 ```
 
 ---
@@ -395,10 +395,10 @@ app/
 
 | Convention | Example |
 |------------|---------|
-| File name | PascalCase + "Repository": `LeadRepository.ts` |
-| Class name | PascalCase + "Repository": `LeadRepository` |
-| Config key | camelCase plural: `leads`, `secureLinks` |
-| Resource path | kebab-case: `/lead-management/leads` |
+| File name | PascalCase + "Repository": `PostRepository.ts` |
+| Class name | PascalCase + "Repository": `PostRepository` |
+| Config key | camelCase plural: `posts`, `comments` |
+| Resource path | kebab-case: `/api/posts` |
 
 ---
 

@@ -10,13 +10,13 @@ export default defineNuxtConfig({
   sanctum: {
     baseUrl: process.env.NUXT_PUBLIC_API_URL,
     endpoints: {
-      login: '/chat/login',
-      user: '/chat/profile',
-      csrf: '/chat/csrf-cookie',
-      logout: '/chat/logout',
+      login: '/login',
+      user: '/user',
+      csrf: '/csrf-cookie',
+      logout: '/logout',
     },
     csrf: {
-      cookie: 'CHAT-XSRF-TOKEN',
+      cookie: 'XSRF-TOKEN',
       header: 'X-XSRF-TOKEN',
     },
     redirect: {
@@ -152,7 +152,7 @@ public override booted() {
 
 // Or in plugin
 const { registerPermissions } = usePermissions()
-registerPermissions(['leads.list', 'leads.create', 'leads.update'])
+registerPermissions(['posts.list', 'posts.create', 'posts.update'])
 ```
 
 ### Permission Checking
@@ -161,17 +161,17 @@ registerPermissions(['leads.list', 'leads.create', 'leads.update'])
 const { can, cannot, before } = usePermissions()
 
 // Check single permission
-if (can('leads.create')) {
-  // User can create leads
+if (can('posts.create')) {
+  // User can create posts
 }
 
 // Check if user cannot
-if (cannot('leads.delete')) {
-  // User cannot delete leads
+if (cannot('posts.delete')) {
+  // User cannot delete posts
 }
 
 // Check multiple (any of)
-if (can(['leads.create', 'leads.update'])) {
+if (can(['posts.create', 'posts.update'])) {
   // User can create OR update
 }
 ```
@@ -200,7 +200,7 @@ export default defineAppConfig({
 ```typescript
 // In page component
 definePageMeta({
-  permissions: 'leads.list',
+  permissions: 'posts.list',
 })
 ```
 
@@ -208,7 +208,7 @@ definePageMeta({
 
 ```typescript
 definePageMeta({
-  permissions: ['leads.list', 'contacts.list'],
+  permissions: ['posts.list', 'authors.list'],
 })
 ```
 
@@ -217,7 +217,7 @@ definePageMeta({
 ```typescript
 definePageMeta({
   middleware: ['auth', 'verified'],
-  permissions: 'leads.list',
+  permissions: 'posts.list',
 })
 ```
 
@@ -230,13 +230,13 @@ definePageMeta({
 ```vue
 <template>
   <!-- Show button only if user can create -->
-  <UButton v-if="can('leads.create')" @click="createLead">
-    Create Lead
+  <UButton v-if="can('posts.create')" @click="createPost">
+    Create Post
   </UButton>
 
   <!-- Show disabled button if cannot delete -->
   <UButton
-    v-if="cannot('leads.delete')"
+    v-if="cannot('posts.delete')"
     disabled
     title="No permission to delete"
   >
@@ -252,16 +252,16 @@ const { can, cannot } = usePermissions()
 ### Action Protection
 
 ```typescript
-const createLeadAction = createLeadActionFactory()
+const createPostAction = createPostActionFactory()
 const { can } = usePermissions()
 
 const handleCreate = async () => {
-  if (!can('leads.create')) {
-    flash.error('You do not have permission to create leads')
+  if (!can('posts.create')) {
+    flash.error('You do not have permission to create posts')
     return
   }
 
-  await createLeadAction(data)
+  await createPostAction(data)
 }
 ```
 
@@ -273,50 +273,50 @@ const handleCreate = async () => {
 // app/constants/permissions.ts
 // Auto-generated from Laravel backend
 
-// Lead permissions
-export const ListLeads = 'leads.list'
-export const ShowLead = 'leads.show'
-export const CreateLead = 'leads.create'
-export const UpdateLead = 'leads.update'
-export const DeleteLead = 'leads.delete'
+// Post permissions
+export const ListPosts = 'posts.list'
+export const ShowPost = 'posts.show'
+export const CreatePost = 'posts.create'
+export const UpdatePost = 'posts.update'
+export const DeletePost = 'posts.delete'
 
-// Contact permissions
-export const ListContacts = 'contacts.list'
-export const ShowContact = 'contacts.show'
-export const CreateContact = 'contacts.create'
-export const UpdateContact = 'contacts.update'
-export const DeleteContact = 'contacts.delete'
+// Author permissions
+export const ListAuthors = 'authors.list'
+export const ShowAuthor = 'authors.show'
+export const CreateAuthor = 'authors.create'
+export const UpdateAuthor = 'authors.update'
+export const DeleteAuthor = 'authors.delete'
 
 // Permission groups
-export const LeadPermissions = [
-  ListLeads,
-  ShowLead,
-  CreateLead,
-  UpdateLead,
-  DeleteLead,
+export const PostPermissions = [
+  ListPosts,
+  ShowPost,
+  CreatePost,
+  UpdatePost,
+  DeletePost,
 ]
 
-export const ContactPermissions = [
-  ListContacts,
-  ShowContact,
-  CreateContact,
-  UpdateContact,
-  DeleteContact,
+export const AuthorPermissions = [
+  ListAuthors,
+  ShowAuthor,
+  CreateAuthor,
+  UpdateAuthor,
+  DeleteAuthor,
 ]
 ```
 
 ### Using Constants
 
 ```typescript
-import { ListLeads, CreateLead } from '~/constants/permissions'
+import { ListPosts, CreatePost } from '~/constants/permissions'
 
 // In page meta
 definePageMeta({
-  permissions: ListLeads,
+  permissions: ListPosts,
 })
 
 // In component
-if (can(CreateLead)) { /* ... */ }
+if (can(CreatePost)) { /* ... */ }
 ```
 
 ---

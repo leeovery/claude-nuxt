@@ -14,11 +14,11 @@ Data tables with column builder pattern and XTable component.
 ## Column Builder Pattern
 
 ```typescript
-// app/tables/leads.ts
+// app/tables/posts.ts
 import { h } from 'vue'
 import type { TableColumn } from '@tanstack/vue-table'
 
-const statusColumn: TableColumn<Lead> = {
+const statusColumn: TableColumn<Post> = {
   id: 'status',
   accessorKey: 'status',
   header: 'Status',
@@ -27,24 +27,24 @@ const statusColumn: TableColumn<Lead> = {
   }, () => row.getValue('status').text),
 }
 
-export const leadsColumnBuilder = createColumnBuilder<Lead>({
+export const postsColumnBuilder = createColumnBuilder<Post>({
   ulid: ulidColumn,
-  contact: contactColumn,
+  author: authorColumn,
   status: statusColumn,
   dates: datesColumn,
 })
 
 // Usage
-const columns = leadsColumnBuilder.all()
-const columns = leadsColumnBuilder.build(['ulid', 'status'])
-const columns = leadsColumnBuilder.except(['dates'])
+const columns = postsColumnBuilder.all()
+const columns = postsColumnBuilder.build(['ulid', 'status'])
+const columns = postsColumnBuilder.except(['dates'])
 ```
 
 ## XTable Usage
 
 ```vue
 <XTable
-  :data="leads"
+  :data="posts"
   :columns="columns"
   :loading="isLoading"
   :fetching="isFetching"
@@ -57,8 +57,8 @@ const columns = leadsColumnBuilder.except(['dates'])
 ## Row Actions
 
 ```typescript
-const rowActions = computed(() => (row: Row<Lead>) => [
-  { label: 'View', to: `/leads/${row.original.ulid}` },
+const rowActions = computed(() => (row: Row<Post>) => [
+  { label: 'View', to: `/posts/${row.original.ulid}` },
   { label: 'Edit', onSelect: () => openEdit(row.original) },
   { label: 'Delete', onSelect: () => handleDelete(row.original) },
 ])

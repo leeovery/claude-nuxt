@@ -39,13 +39,13 @@ export default defineNuxtConfig({
   sanctum: {
     baseUrl: process.env.NUXT_PUBLIC_API_URL,
     endpoints: {
-      login: '/chat/login',
-      user: '/chat/profile',
-      csrf: '/chat/csrf-cookie',
-      logout: '/chat/logout',
+      login: '/login',
+      user: '/user',
+      csrf: '/csrf-cookie',
+      logout: '/logout',
     },
     csrf: {
-      cookie: 'CHAT-XSRF-TOKEN',
+      cookie: 'XSRF-TOKEN',
       header: 'X-XSRF-TOKEN',
     },
     redirect: {
@@ -84,7 +84,7 @@ export default defineNuxtConfig({
       },
 
       // External service URLs
-      chatService: { urls: { api: undefined } },
+      externalService: { urls: { api: undefined } },
     },
   },
 
@@ -198,7 +198,7 @@ export default defineAppConfig({
 NUXT_PUBLIC_API_URL=https://api.example.com
 
 # External services
-NUXT_PUBLIC_CHAT_SERVICE_URLS_API=https://chat.example.com
+NUXT_PUBLIC_EXTERNAL_SERVICE_URLS_API=https://external.example.com
 
 # WebSocket (Laravel Echo)
 NUXT_PUBLIC_ECHO_KEY=your-pusher-key

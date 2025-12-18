@@ -7,10 +7,10 @@ The XForm component from x-ui layer handles form state, submission, and validati
 ```vue
 <XForm
   ref="formRef"
-  url="/lead-management/leads"
+  url="/api/posts"
   method="POST"
   :data="formData"
-  :waiting="waitingFor.leads.creating"
+  :waiting="waitingFor.posts.creating"
   @submit="onSubmit"
   @success="onSuccess"
   @error="onError"
@@ -52,13 +52,13 @@ The XForm component from x-ui layer handles form state, submission, and validati
 ## Complete Form Example
 
 ```vue
-<!-- app/components/Slideovers/CreateLeadSlideover.vue -->
+<!-- app/components/Slideovers/CreatePostSlideover.vue -->
 <script lang="ts" setup>
-import createLeadActionFactory from '~/features/leads/actions/create-lead-action'
-import type { CreateLeadData } from '~/features/leads/mutations/create-lead-mutation'
+import createPostActionFactory from '~/features/posts/actions/create-post-action'
+import type { CreatePostData } from '~/features/posts/mutations/create-post-mutation'
 
 // Props & Emits
-const props = defineProps<{ contact?: Contact }>()
+const props = defineProps<{ author?: Author }>()
 const emits = defineEmits<{ close: [success: boolean] }>()
 
 // Composables
@@ -66,31 +66,31 @@ const { is, waitingFor } = useWait()
 
 // Refs
 const formRef = useTemplateRef('formRef')
-const existingContact = ref<Contact>()
+const existingAuthor = ref<Author>()
 
 // Form data
-const formData = ref<CreateLeadData>({
-  email: props.contact?.email || '',
-  name: props.contact?.name || '',
-  demand: '',
-  callScheduledAt: '',
-  testFlag: false,
-  sendLoginLink: true,
+const formData = ref<CreatePostData>({
+  email: props.author?.email || '',
+  name: props.author?.name || '',
+  content: '',
+  publishAt: '',
+  isDraft: false,
+  notifySubscribers: true,
 })
 
 // Watchers
-watch(existingContact, (contact) => {
-  if (contact) {
-    formData.value.name = contact.name
-    formData.value.email = contact.email
+watch(existingAuthor, (author) => {
+  if (author) {
+    formData.value.name = author.name
+    formData.value.email = author.email
   }
 })
 
 // Methods
-const createLeadAction = createLeadActionFactory()
+const createPostAction = createPostActionFactory()
 
-const onSubmit = async (data: CreateLeadData) => {
-  return createLeadAction(data)
+const onSubmit = async (data: CreatePostData) => {
+  return createPostAction(data)
 }
 
 const onSuccess = () => {
@@ -104,22 +104,22 @@ const onError = ({ error }: { error: unknown }) => {
 </script>
 
 <template>
-  <USlideover title="Create Lead">
+  <USlideover title="Create Post">
     <XForm
       ref="formRef"
-      url="/lead-management/leads"
+      url="/api/posts"
       method="POST"
       :data="formData"
-      :waiting="waitingFor.leads.creating"
+      :waiting="waitingFor.posts.creating"
       @submit="onSubmit"
       @success="onSuccess"
       @error="onError"
     >
       <div class="space-y-4">
-        <!-- Contact lookup -->
-        <ContactEmailInput
+        <!-- Author lookup -->
+        <AuthorEmailInput
           v-model:email="formData.email"
-          v-model:contact="existingContact"
+          v-model:author="existingAuthor"
         />
 
         <!-- Name -->
@@ -127,20 +127,20 @@ const onError = ({ error }: { error: unknown }) => {
           <UInput v-model="formData.name" />
         </UFormField>
 
-        <!-- Demand -->
-        <UFormField label="Demand" name="demand">
-          <UTextarea v-model="formData.demand" rows="3" />
+        <!-- Content -->
+        <UFormField label="Content" name="content">
+          <UTextarea v-model="formData.content" rows="3" />
         </UFormField>
 
-        <!-- Call scheduled -->
-        <UFormField label="Call Scheduled" name="callScheduledAt">
-          <UInput v-model="formData.callScheduledAt" type="datetime-local" />
+        <!-- Publish date -->
+        <UFormField label="Publish At" name="publishAt">
+          <UInput v-model="formData.publishAt" type="datetime-local" />
         </UFormField>
 
         <!-- Options -->
         <div class="space-y-2">
-          <UCheckbox v-model="formData.testFlag" label="Test lead" />
-          <UCheckbox v-model="formData.sendLoginLink" label="Send login link" />
+          <UCheckbox v-model="formData.isDraft" label="Save as draft" />
+          <UCheckbox v-model="formData.notifySubscribers" label="Notify subscribers" />
         </div>
       </div>
 
@@ -153,8 +153,8 @@ const onError = ({ error }: { error: unknown }) => {
         </UButton>
         <UButton
           type="submit"
-          label="Create Lead"
-          :loading="is(waitingFor.leads.creating)"
+          label="Create Post"
+          :loading="is(waitingFor.posts.creating)"
         />
       </template>
     </XForm>
@@ -217,20 +217,20 @@ form.errors.forget('email')
 Fluent API for form configuration:
 
 ```typescript
-const form = useFormBuilder<CreateLeadData>()
-  .post('/lead-management/leads')
+const form = useFormBuilder<CreatePostData>()
+  .post('/api/posts')
   .data({
     name: '',
     email: '',
-    demand: '',
+    content: '',
   })
-  .waiting('leads.creating')
+  .waiting('posts.creating')
   .resetOnSuccess(true)
   .before(({ data }) => {
     // Transform data before submit
   })
   .success(({ response }) => {
-    flash.success('Lead created!')
+    flash.success('Post created!')
     emits('close')
   })
   .error(({ error }) => {
@@ -275,7 +275,7 @@ form.data           // reactive data
 <UFormField label="Status" name="status">
   <USelect
     v-model="formData.status"
-    :options="LeadStatus.values()"
+    :options="PostStatus.values()"
     option-attribute="text"
   />
 </UFormField>
@@ -284,7 +284,7 @@ form.data           // reactive data
 ### Checkbox
 
 ```vue
-<UCheckbox v-model="formData.testFlag" label="Test lead" />
+<UCheckbox v-model="formData.isDraft" label="Save as draft" />
 ```
 
 ### Date/Time
@@ -298,14 +298,14 @@ form.data           // reactive data
 ### Custom Input Component
 
 ```vue
-<!-- app/components/Form/ContactEmailInput.vue -->
+<!-- app/components/Form/AuthorEmailInput.vue -->
 <script lang="ts" setup>
 const email = defineModel<string>('email')
-const contact = defineModel<Contact>('contact')
+const author = defineModel<Author>('author')
 
-const contactApi = useRepository('contacts')
+const authorApi = useRepository('authors')
 const searching = ref(false)
-const results = ref<Contact[]>([])
+const results = ref<Author[]>([])
 
 const search = useDebounceFn(async () => {
   if (!email.value || email.value.length < 3) {
@@ -315,7 +315,7 @@ const search = useDebounceFn(async () => {
 
   searching.value = true
   try {
-    const { data } = await contactApi.search(email.value)
+    const { data } = await authorApi.search(email.value)
     results.value = data
   } finally {
     searching.value = false
@@ -324,9 +324,9 @@ const search = useDebounceFn(async () => {
 
 watch(email, search)
 
-const selectContact = (c: Contact) => {
-  contact.value = c
-  email.value = c.email
+const selectAuthor = (a: Author) => {
+  author.value = a
+  email.value = a.email
   results.value = []
 }
 </script>
@@ -339,12 +339,12 @@ const selectContact = (c: Contact) => {
 
     <div v-if="results.length" class="mt-2 border rounded">
       <button
-        v-for="c in results"
-        :key="c.ulid"
+        v-for="a in results"
+        :key="a.ulid"
         class="block w-full p-2 text-left hover:bg-gray-100"
-        @click="selectContact(c)"
+        @click="selectAuthor(a)"
       >
-        {{ c.name }} ({{ c.email }})
+        {{ a.name }} ({{ a.email }})
       </button>
     </div>
   </div>
@@ -357,36 +357,36 @@ const selectContact = (c: Contact) => {
 
 ```vue
 <script lang="ts" setup>
-const props = defineProps<{ lead: Lead }>()
+const props = defineProps<{ post: Post }>()
 const emits = defineEmits<{ close: [success: boolean] }>()
 
 // Initialize form with existing data
-const formData = ref<UpdateLeadData>({
-  name: props.lead.contact.name,
-  demand: props.lead.demand,
-  testFlag: props.lead.testFlag,
+const formData = ref<UpdatePostData>({
+  name: props.post.author.name,
+  content: props.post.content,
+  isDraft: props.post.isDraft,
 })
 
 // Watch for prop changes
-watch(() => props.lead, (lead) => {
+watch(() => props.post, (post) => {
   formData.value = {
-    name: lead.contact.name,
-    demand: lead.demand,
-    testFlag: lead.testFlag,
+    name: post.author.name,
+    content: post.content,
+    isDraft: post.isDraft,
   }
 }, { immediate: true })
 
-const updateLeadAction = updateLeadActionFactory()
+const updatePostAction = updatePostActionFactory()
 
-const onSubmit = async (data: UpdateLeadData) => {
-  return updateLeadAction(props.lead.ulid, data)
+const onSubmit = async (data: UpdatePostData) => {
+  return updatePostAction(props.post.ulid, data)
 }
 </script>
 
 <template>
-  <USlideover title="Edit Lead">
+  <USlideover title="Edit Post">
     <XForm
-      :url="`/lead-management/leads/${lead.ulid}`"
+      :url="`/api/posts/${post.ulid}`"
       method="PUT"
       :data="formData"
       @submit="onSubmit"

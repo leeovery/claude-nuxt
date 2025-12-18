@@ -10,24 +10,24 @@ Global loading state management:
 const { start, stop, is, waitingFor } = useWait()
 
 // Global operations (no ID)
-waitingFor.leads.creating       // Creating any lead
-waitingFor.leads.listing        // Listing leads
+waitingFor.posts.creating       // Creating any post
+waitingFor.posts.listing        // Listing posts
 
 // Per-item operations (with ID)
-waitingFor.lead.loading(ulid)   // Loading specific lead
-waitingFor.lead.updating(ulid)  // Updating specific lead
-waitingFor.lead.deleting(ulid)  // Deleting specific lead
+waitingFor.post.loading(ulid)   // Loading specific post
+waitingFor.post.updating(ulid)  // Updating specific post
+waitingFor.post.deleting(ulid)  // Deleting specific post
 
 // Start/stop
-start(waitingFor.leads.creating)
+start(waitingFor.posts.creating)
 // ... do work
-stop(waitingFor.leads.creating)
+stop(waitingFor.posts.creating)
 
 // Check state
-const isCreating = is(waitingFor.leads.creating)
+const isCreating = is(waitingFor.posts.creating)
 
 // In templates
-<UButton :loading="is(waitingFor.leads.creating)">Create</UButton>
+<UButton :loading="is(waitingFor.posts.creating)">Create</UButton>
 ```
 
 ### useFlash
@@ -38,14 +38,14 @@ Toast notification system:
 const flash = useFlash()
 
 // Basic messages
-flash.success('Lead created successfully.')
-flash.error('Failed to create lead.')
+flash.success('Post created successfully.')
+flash.error('Failed to create post.')
 flash.warning('This action cannot be undone.')
 flash.info('New updates available.')
 
 // With description
-flash.success('Lead created', 'A secure link has been sent.')
-flash.error('Failed to create lead', 'Please check your input.')
+flash.success('Post created', 'It will be published shortly.')
+flash.error('Failed to create post', 'Please check your input.')
 
 // Duration (ms)
 flash.success('Quick message', undefined, { duration: 2000 })
@@ -59,14 +59,14 @@ Permission checking:
 const { can, cannot, before, registerPermissions } = usePermissions()
 
 // Check single permission
-if (can('leads.create')) { /* ... */ }
-if (cannot('leads.delete')) { /* ... */ }
+if (can('posts.create')) { /* ... */ }
+if (cannot('posts.delete')) { /* ... */ }
 
 // Check multiple (any of)
-if (can(['leads.create', 'leads.update'])) { /* ... */ }
+if (can(['posts.create', 'posts.update'])) { /* ... */ }
 
 // Register permissions (usually in init plugin)
-registerPermissions(['leads.list', 'leads.create', 'leads.update'])
+registerPermissions(['posts.list', 'posts.create', 'posts.update'])
 
 // Admin bypass
 before(() => {
@@ -80,21 +80,21 @@ before(() => {
 URL-synced reactive filters:
 
 ```typescript
-const { filters, hasFilters, resetFilters, resetFilter } = useReactiveFilters<GetLeadsFilters>({
+const { filters, hasFilters, resetFilters, resetFilter } = useReactiveFilters<GetPostsFilters>({
   // Default values
   status: undefined,
-  testFlag: undefined,
+  isDraft: undefined,
   page: 1,
   size: 25,
 }, {
   syncWithUrl: true,              // Sync to URL query params
   neverResetOn: ['page'],         // Don't reset page on filter changes
   debounceUrlUpdate: 300,         // Debounce URL updates
-  provideAs: 'LeadFilters',       // Provide to children
+  provideAs: 'PostFilters',       // Provide to children
 })
 
 // Filters are reactive
-filters.status = 'new lead'      // Triggers query refetch
+filters.status = 'published'      // Triggers query refetch
 filters.page = 2                  // Triggers query refetch
 
 // Check if any filters active
@@ -114,13 +114,13 @@ resetFilters()
 Slideover panel control:
 
 ```typescript
-const { open, close, isOpen, props } = useSlideover('create-lead')
+const { open, close, isOpen, props } = useSlideover('create-post')
 
 // Open slideover
 open()
 
 // Open with props
-open({ contact: selectedContact })
+open({ author: selectedAuthor })
 
 // Close
 close()
@@ -129,8 +129,8 @@ close()
 if (isOpen.value) { /* ... */ }
 
 // Access props in slideover component
-const slideover = useSlideover('create-lead')
-const contact = computed(() => slideover.props.value?.contact)
+const slideover = useSlideover('create-post')
+const author = computed(() => slideover.props.value?.author)
 ```
 
 ### useModal
@@ -138,13 +138,13 @@ const contact = computed(() => slideover.props.value?.contact)
 Modal dialog control:
 
 ```typescript
-const { open, close, isOpen, props } = useModal('delete-lead')
+const { open, close, isOpen, props } = useModal('delete-post')
 
 // Open modal
 open()
 
 // Open with props
-open({ lead: selectedLead })
+open({ post: selectedPost })
 
 // Close
 close()
@@ -158,12 +158,12 @@ Confirmation with confirm/cancel actions:
 const { trigger } = useConfirmationToast()
 
 trigger({
-  title: 'Delete Lead?',
+  title: 'Delete Post?',
   description: 'This action cannot be undone.',
   confirmLabel: 'Delete',
   cancelLabel: 'Cancel',
   onConfirm: async () => {
-    await deleteLeadAction(lead)
+    await deletePostAction(post)
   },
   onCancel: () => {
     // Optional cancel handler
@@ -179,21 +179,21 @@ WebSocket channel subscriptions:
 const { privateChannel, presenceChannel, leaveChannel } = useRealtime()
 
 // Subscribe to private channel
-const channel = privateChannel('leads.{id}', leadId)
+const channel = privateChannel('posts.{id}', postId)
 
 // Listen for events
-channel.on('LeadUpdated', (event) => {
+channel.on('PostUpdated', (event) => {
   refresh()
 })
 
 // Multiple events
-channel.on(['LeadUpdated', 'LeadDeleted'], (event) => {
+channel.on(['PostUpdated', 'PostDeleted'], (event) => {
   refresh()
 })
 
 // Cleanup
 onUnmounted(() => {
-  leaveChannel('leads.{id}', leadId)
+  leaveChannel('posts.{id}', postId)
 })
 ```
 
@@ -205,9 +205,9 @@ App header state:
 const { setAppHeader, appHeader } = useAppHeader()
 
 setAppHeader({
-  title: 'Leads',
-  subtitle: 'Manage your leads',
-  icon: 'lucide:briefcase',
+  title: 'Posts',
+  subtitle: 'Manage your posts',
+  icon: 'lucide:file-text',
 })
 
 // Access in layout
@@ -222,9 +222,9 @@ Breadcrumb navigation:
 const { setBreadcrumbs, breadcrumbs } = useBreadcrumbs()
 
 setBreadcrumbs([
-  { label: 'Lead Management' },
-  { label: 'Leads', to: '/leads' },
-  { label: 'John Doe' },
+  { label: 'Content' },
+  { label: 'Posts', to: '/posts' },
+  { label: 'My Post' },
 ])
 
 // Access in layout
@@ -285,12 +285,12 @@ export default function useForm<T>(url: string, method: string, initialData: T) 
 ### Domain-Specific Composable
 
 ```typescript
-// app/composables/useFeedbackCategories.ts
-export function useFeedbackCategories() {
-  const builtTree = useState('feedback-categories')
+// app/composables/useCategories.ts
+export function useCategories() {
+  const builtTree = useState('categories')
 
   const getCategoryTree = (
-    categories: MaybeRef<FeedbackCategory[] | undefined>,
+    categories: MaybeRef<Category[] | undefined>,
     type?: string
   ): ComputedRef<Category | CategoryTree | undefined> => {
     return computed(() => {
@@ -334,30 +334,30 @@ export function useHandleActionError() {
 }
 ```
 
-### Job Count Composable
+### Task Count Composable
 
 ```typescript
-// app/composables/useRemainingJobCount.ts
-export default function useRemainingJobCount() {
-  const remainingJobCount = useState<number>('remaining-job-count', () => 0)
-  const jobApi = useRepository('jobs')
+// app/composables/useRemainingTaskCount.ts
+export default function useRemainingTaskCount() {
+  const remainingTaskCount = useState<number>('remaining-task-count', () => 0)
+  const taskApi = useRepository('tasks')
   const { privateChannel } = useRealtime()
 
-  const fetchJobCount = async () => {
-    const { data } = await jobApi.list({ filter: { status: 'pending' } })
-    remainingJobCount.value = data.length
+  const fetchTaskCount = async () => {
+    const { data } = await taskApi.list({ filter: { status: 'pending' } })
+    remainingTaskCount.value = data.length
   }
 
   const init = () => {
-    fetchJobCount()
+    fetchTaskCount()
 
-    privateChannel(MatchJobs).on(
-      [MatchJobCreated, MatchJobComplete],
-      fetchJobCount
+    privateChannel(Tasks).on(
+      [TaskCreated, TaskCompleted],
+      fetchTaskCount
     )
   }
 
-  return { remainingJobCount, init }
+  return { remainingTaskCount, init }
 }
 ```
 
@@ -369,9 +369,9 @@ export default function useRemainingJobCount() {
 app/
 └── composables/
     ├── useUser.ts                 # User state management
-    ├── useFeedbackCategories.ts   # Domain-specific logic
+    ├── useCategories.ts           # Domain-specific logic
     ├── useHandleActionError.ts    # Error handling utility
-    └── useRemainingJobCount.ts    # Real-time job tracking
+    └── useRemainingTaskCount.ts   # Real-time task tracking
 ```
 
 ---

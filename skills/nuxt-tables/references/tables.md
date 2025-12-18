@@ -34,15 +34,15 @@ export function createColumnBuilder<TModel>(
 ## Complete Table Configuration
 
 ```typescript
-// app/tables/leads.ts
+// app/tables/posts.ts
 import { h } from 'vue'
 import type { TableColumn } from '@tanstack/vue-table'
-import type Lead from '~/models/Lead'
+import type Post from '~/models/Post'
 import Copyable from '~/components/Common/Copyable.vue'
 import { truncateMiddle } from '#layers/base/app/utils'
 
 // ULID column with copy functionality
-const ulidColumn: TableColumn<Lead> = {
+const ulidColumn: TableColumn<Post> = {
   id: 'ulid',
   accessorKey: 'ulid',
   header: 'ULID',
@@ -52,7 +52,7 @@ const ulidColumn: TableColumn<Lead> = {
 }
 
 // Status column with badge
-const statusColumn: TableColumn<Lead> = {
+const statusColumn: TableColumn<Post> = {
   id: 'status',
   accessorKey: 'status',
   header: 'Status',
@@ -61,68 +61,68 @@ const statusColumn: TableColumn<Lead> = {
   }, () => row.getValue('status').text),
 }
 
-// Contact column with link
-const contactColumn: TableColumn<Lead> = {
-  id: 'contact',
-  accessorKey: 'contact.name',
-  header: 'Contact',
+// Author column with link
+const authorColumn: TableColumn<Post> = {
+  id: 'author',
+  accessorKey: 'author.name',
+  header: 'Author',
   cell: ({ row }) => h(NuxtLink, {
-    to: `/contacts/${row.original.contact.ulid}`,
+    to: `/users/${row.original.author.ulid}`,
     class: 'text-primary-500 hover:underline',
-  }, () => row.original.contact.name),
+  }, () => row.original.author.name),
 }
 
-// Email column
-const emailColumn: TableColumn<Lead> = {
-  id: 'email',
-  accessorKey: 'contact.email',
-  header: 'Email',
-  cell: ({ row }) => row.original.contact.email,
+// Title column
+const titleColumn: TableColumn<Post> = {
+  id: 'title',
+  accessorKey: 'title',
+  header: 'Title',
+  cell: ({ row }) => row.original.title,
 }
 
-// Demand column (truncated)
-const demandColumn: TableColumn<Lead> = {
-  id: 'demand',
-  accessorKey: 'demand',
-  header: 'Demand',
+// Content column (truncated)
+const contentColumn: TableColumn<Post> = {
+  id: 'content',
+  accessorKey: 'content',
+  header: 'Content',
   cell: ({ row }) => h('span', {
     class: 'truncate max-w-xs',
-    title: row.original.demand,
-  }, row.original.demand),
+    title: row.original.content,
+  }, row.original.content),
 }
 
 // Dates column
-const datesColumn: TableColumn<Lead> = {
+const datesColumn: TableColumn<Post> = {
   id: 'dates',
   header: 'Created',
   cell: ({ row }) => row.original.createdAt.format('DD MMM YYYY'),
 }
 
-// Secure links count column
-const secureLinksColumn: TableColumn<Lead> = {
-  id: 'secureLinks',
-  header: 'Links',
-  cell: ({ row }) => row.original.secureLinksCount ?? 0,
+// Comments count column
+const commentsColumn: TableColumn<Post> = {
+  id: 'comments',
+  header: 'Comments',
+  cell: ({ row }) => row.original.commentsCount ?? 0,
 }
 
-// Test flag column
-const testFlagColumn: TableColumn<Lead> = {
-  id: 'testFlag',
-  header: 'Test',
-  cell: ({ row }) => row.original.testFlag
-    ? h(UBadge, { color: 'warning' }, () => 'Test')
+// Draft flag column
+const draftColumn: TableColumn<Post> = {
+  id: 'isDraft',
+  header: 'Draft',
+  cell: ({ row }) => row.original.isDraft
+    ? h(UBadge, { color: 'warning' }, () => 'Draft')
     : null,
 }
 
 // Export builder
-export const leadsColumnBuilder = createColumnBuilder<Lead>({
+export const postsColumnBuilder = createColumnBuilder<Post>({
   ulid: ulidColumn,
-  contact: contactColumn,
-  email: emailColumn,
+  title: titleColumn,
+  author: authorColumn,
   status: statusColumn,
-  demand: demandColumn,
-  secureLinks: secureLinksColumn,
-  testFlag: testFlagColumn,
+  content: contentColumn,
+  comments: commentsColumn,
+  isDraft: draftColumn,
   dates: datesColumn,
 })
 ```
@@ -133,13 +133,13 @@ export const leadsColumnBuilder = createColumnBuilder<Lead>({
 
 ```typescript
 // All columns
-const columns = leadsColumnBuilder.all()
+const columns = postsColumnBuilder.all()
 
 // Specific columns
-const columns = leadsColumnBuilder.build(['ulid', 'contact', 'status'])
+const columns = postsColumnBuilder.build(['ulid', 'title', 'status'])
 
 // Exclude columns
-const columns = leadsColumnBuilder.except(['ulid', 'dates'])
+const columns = postsColumnBuilder.except(['ulid', 'dates'])
 ```
 
 ---
@@ -148,7 +148,7 @@ const columns = leadsColumnBuilder.except(['ulid', 'dates'])
 
 ```vue
 <XTable
-  :data="leads"
+  :data="posts"
   :columns="columns"
   :loading="isLoading"
   :fetching="isFetching"
@@ -185,25 +185,25 @@ const columns = leadsColumnBuilder.except(['ulid', 'dates'])
 ```typescript
 import type { Row } from '@tanstack/vue-table'
 
-const rowActions = computed(() => (row: Row<Lead>) => [
+const rowActions = computed(() => (row: Row<Post>) => [
   // Navigation action
   {
-    label: 'View lead',
-    to: `/leads/${row.original.ulid}`,
+    label: 'View post',
+    to: `/posts/${row.original.ulid}`,
   },
   // Navigation action
   {
-    label: 'View contact',
-    to: `/contacts/${row.original.contact.ulid}`,
+    label: 'View author',
+    to: `/users/${row.original.author.ulid}`,
   },
   // Function action
   {
-    label: 'Edit lead',
-    onSelect: () => openUpdateSlideover({ lead: row.original }),
+    label: 'Edit post',
+    onSelect: () => openUpdateSlideover({ post: row.original }),
   },
   // Destructive action
   {
-    label: 'Delete lead',
+    label: 'Delete post',
     onSelect: () => handleDelete([row.original]),
   },
 ])
@@ -212,13 +212,13 @@ const rowActions = computed(() => (row: Row<Lead>) => [
 ### Conditional Actions
 
 ```typescript
-const rowActions = computed(() => (row: Row<Lead>) => {
+const rowActions = computed(() => (row: Row<Post>) => {
   const actions = [
-    { label: 'View', to: `/leads/${row.original.ulid}` },
+    { label: 'View', to: `/posts/${row.original.ulid}` },
   ]
 
   // Conditional edit
-  if (can(UpdateLead)) {
+  if (can(UpdatePost)) {
     actions.push({
       label: 'Edit',
       onSelect: () => openEdit(row.original),
@@ -226,7 +226,7 @@ const rowActions = computed(() => (row: Row<Lead>) => {
   }
 
   // Conditional delete
-  if (can(DeleteLead) && !row.original.status.isTerminal()) {
+  if (can(DeletePost) && row.original.status.isEditable()) {
     actions.push({
       label: 'Delete',
       onSelect: () => handleDelete(row.original),
@@ -242,46 +242,46 @@ const rowActions = computed(() => (row: Row<Lead>) => {
 ## Table Component Pattern
 
 ```vue
-<!-- app/components/Tables/LeadsTable.vue -->
+<!-- app/components/Tables/PostsTable.vue -->
 <script lang="ts" setup>
-import { leadsColumnBuilder } from '~/tables/leads'
+import { postsColumnBuilder } from '~/tables/posts'
 import type { Row } from '@tanstack/vue-table'
 
 const props = defineProps<{
-  leads: Lead[]
+  posts: Post[]
   loading?: boolean
   fetching?: boolean
 }>()
 
 const emits = defineEmits<{
-  edit: [lead: Lead]
-  delete: [leads: Lead[]]
-  select: [leads: Lead[]]
+  edit: [post: Post]
+  delete: [posts: Post[]]
+  select: [posts: Post[]]
 }>()
 
 // Get all columns
-const columns = leadsColumnBuilder.all()
+const columns = postsColumnBuilder.all()
 
 // Or specific columns for this context
-// const columns = leadsColumnBuilder.build(['contact', 'status', 'dates'])
+// const columns = postsColumnBuilder.build(['title', 'status', 'dates'])
 
 // Row actions
-const rowActions = computed(() => (row: Row<Lead>) => [
-  { label: 'View lead', to: `/leads/${row.original.ulid}` },
-  { label: 'View contact', to: `/contacts/${row.original.contact.ulid}` },
-  { label: 'Edit lead', onSelect: () => emits('edit', row.original) },
-  { label: 'Delete lead', onSelect: () => emits('delete', [row.original]) },
+const rowActions = computed(() => (row: Row<Post>) => [
+  { label: 'View post', to: `/posts/${row.original.ulid}` },
+  { label: 'View author', to: `/users/${row.original.author.ulid}` },
+  { label: 'Edit post', onSelect: () => emits('edit', row.original) },
+  { label: 'Delete post', onSelect: () => emits('delete', [row.original]) },
 ])
 
 // Row click handler
-const handleRowClick = ({ row }: { row: Row<Lead> }) => {
-  navigateTo(`/leads/${row.original.ulid}`)
+const handleRowClick = ({ row }: { row: Row<Post> }) => {
+  navigateTo(`/posts/${row.original.ulid}`)
 }
 </script>
 
 <template>
   <XTable
-    :data="leads"
+    :data="posts"
     :columns="columns"
     :loading="loading"
     :fetching="fetching"
@@ -301,7 +301,7 @@ const handleRowClick = ({ row }: { row: Row<Lead> }) => {
 ```typescript
 import { h } from 'vue'
 
-const statusColumn: TableColumn<Lead> = {
+const statusColumn: TableColumn<Post> = {
   id: 'status',
   header: 'Status',
   cell: ({ row }) => h(UBadge, {
@@ -313,7 +313,7 @@ const statusColumn: TableColumn<Lead> = {
 ### Complex Cell
 
 ```typescript
-const actionsColumn: TableColumn<Lead> = {
+const actionsColumn: TableColumn<Post> = {
   id: 'actions',
   header: '',
   cell: ({ row }) => h('div', { class: 'flex gap-2' }, [
@@ -337,11 +337,11 @@ const actionsColumn: TableColumn<Lead> = {
 ### Conditional Rendering
 
 ```typescript
-const testFlagColumn: TableColumn<Lead> = {
-  id: 'testFlag',
-  header: 'Test',
-  cell: ({ row }) => row.original.testFlag
-    ? h(UBadge, { color: 'warning' }, () => 'Test')
+const draftColumn: TableColumn<Post> = {
+  id: 'isDraft',
+  header: 'Draft',
+  cell: ({ row }) => row.original.isDraft
+    ? h(UBadge, { color: 'warning' }, () => 'Draft')
     : null,
 }
 ```
@@ -353,9 +353,9 @@ const testFlagColumn: TableColumn<Lead> = {
 ```
 app/
 └── tables/
-    ├── leads.ts
-    ├── contacts.ts
-    └── evaluations.ts
+    ├── posts.ts
+    ├── users.ts
+    └── comments.ts
 ```
 
 ---
@@ -364,8 +364,8 @@ app/
 
 | Type | Convention |
 |------|------------|
-| File | kebab-case: `leads.ts` |
-| Builder export | camelCase + "ColumnBuilder": `leadsColumnBuilder` |
+| File | kebab-case: `posts.ts` |
+| Builder export | camelCase + "ColumnBuilder": `postsColumnBuilder` |
 | Column variables | camelCase + "Column": `statusColumn` |
 
 ---

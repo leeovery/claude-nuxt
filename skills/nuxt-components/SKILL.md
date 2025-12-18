@@ -16,13 +16,13 @@ Vue 3 Composition API components with standardized organization and patterns.
 ```
 components/
 ├── Common/       # Shared utilities (Copyable, LoadingLine)
-├── Detail/       # Entity detail views (LeadDetail)
-├── Form/         # Reusable form inputs (ContactEmailInput)
+├── Detail/       # Entity detail views (PostDetail)
+├── Form/         # Reusable form inputs (AuthorSelect)
 ├── Modals/       # Confirmation/action modals
 ├── Nav/          # Navigation elements
-├── Slideovers/   # Slideout panels (CreateLeadSlideover)
+├── Slideovers/   # Slideout panels (CreatePostSlideover)
 ├── TabSections/  # Tab content sections
-└── Tables/       # Data tables (LeadsTable)
+└── Tables/       # Data tables (PostsTable)
 ```
 
 ## Script Setup Order
@@ -30,10 +30,10 @@ components/
 ```vue
 <script lang="ts" setup>
 // 1. Imports
-import createLeadActionFactory from '~/features/leads/actions/create-lead-action'
+import createPostActionFactory from '~/features/posts/actions/create-post-action'
 
 // 2. Props & Emits
-const props = defineProps<{ contact?: Contact }>()
+const props = defineProps<{ author?: Author }>()
 const emits = defineEmits<{ close: [success: boolean] }>()
 
 // 3. Composables
@@ -49,25 +49,25 @@ const formRef = useTemplateRef('formRef')
 const isOpen = ref(false)
 
 // 7. Reactive props
-const formData = ref<CreateLeadData>({ email: '', name: '' })
+const formData = ref<CreatePostData>({ title: '', content: '' })
 
 // 8. Computed
-const canSubmit = computed(() => formData.value.email && formData.value.name)
+const canSubmit = computed(() => formData.value.title && formData.value.content)
 
 // 9. Fetch + queries
-const { data: leads, refresh } = getLeadsQuery(filters)
+const { data: posts, refresh } = getPostsQuery(filters)
 
 // 10. Builders (action/mutation factories)
-const createLeadAction = createLeadActionFactory()
+const createPostAction = createPostActionFactory()
 
 // 11. Watchers
-watch(existingContact, (c) => { formData.value.name = c?.name || '' })
+watch(selectedAuthor, (a) => { formData.value.authorId = a?.ulid || '' })
 
 // 12. Methods
-const onSubmit = async (data) => { await createLeadAction(data) }
+const onSubmit = async (data) => { await createPostAction(data) }
 
 // 13. Real-time listeners
-privateChannel(Leads).on(LeadCreated, refresh)
+privateChannel(Posts).on(PostCreated, refresh)
 
 // 14. Provides
 provide(SlideoverKey, { isOpen })

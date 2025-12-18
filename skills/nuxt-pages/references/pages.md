@@ -8,22 +8,22 @@ Nuxt generates routes from the `pages/` directory structure:
 |------|-------|
 | `pages/index.vue` | `/` |
 | `pages/profile.vue` | `/profile` |
-| `pages/leads/index.vue` | `/leads` |
-| `pages/leads/[ulid].vue` | `/leads/:ulid` |
+| `pages/posts/index.vue` | `/posts` |
+| `pages/posts/[ulid].vue` | `/posts/:ulid` |
 | `pages/auth/login.vue` | `/auth/login` |
 
 ### Dynamic Routes
 
 ```
 pages/
-├── leads/
-│   ├── index.vue          # /leads
-│   └── [ulid].vue         # /leads/:ulid
-└── contacts/
-    ├── index.vue          # /contacts
+├── posts/
+│   ├── index.vue          # /posts
+│   └── [ulid].vue         # /posts/:ulid
+└── users/
+    ├── index.vue          # /users
     └── [ulid]/
-        ├── index.vue      # /contacts/:ulid
-        └── edit.vue       # /contacts/:ulid/edit
+        ├── index.vue      # /users/:ulid
+        └── edit.vue       # /users/:ulid/edit
 ```
 
 ---
@@ -35,12 +35,12 @@ pages/
 ```typescript
 // Single permission
 definePageMeta({
-  permissions: 'leads.list',
+  permissions: 'posts.list',
 })
 
 // Multiple permissions (any of)
 definePageMeta({
-  permissions: ['leads.list', 'contacts.list'],
+  permissions: ['posts.list', 'users.list'],
 })
 ```
 
@@ -72,36 +72,36 @@ definePageMeta({
 ## Complete List Page
 
 ```vue
-<!-- app/pages/leads/index.vue -->
+<!-- app/pages/posts/index.vue -->
 <script lang="ts" setup>
-import getLeadsQueryFactory, { type GetLeadsFilters } from '~/features/leads/queries/get-leads-query'
-import deleteLeadActionFactory from '~/features/leads/actions/delete-lead-action'
-import { ListLeads, CreateLead } from '~/constants/permissions'
+import getPostsQueryFactory, { type GetPostsFilters } from '~/features/posts/queries/get-posts-query'
+import deletePostActionFactory from '~/features/posts/actions/delete-post-action'
+import { ListPosts, CreatePost } from '~/constants/permissions'
 import type { Row } from '@tanstack/vue-table'
 
 // Page meta
 definePageMeta({
-  permissions: ListLeads,
+  permissions: ListPosts,
 })
 
 // Page header
 const { setAppHeader } = useAppHeader()
 setAppHeader({
-  title: 'Leads',
-  icon: 'lucide:briefcase',
+  title: 'Posts',
+  icon: 'lucide:file-text',
 })
 
 // Breadcrumbs
 const { setBreadcrumbs } = useBreadcrumbs()
 setBreadcrumbs([
-  { label: 'Lead Management' },
-  { label: 'Leads' },
+  { label: 'Content' },
+  { label: 'Posts' },
 ])
 
 // Reactive filters
-const { filters, hasFilters, resetFilters } = useReactiveFilters<GetLeadsFilters>({
+const { filters, hasFilters, resetFilters } = useReactiveFilters<GetPostsFilters>({
   status: undefined,
-  testFlag: undefined,
+  isDraft: undefined,
   page: 1,
   size: 25,
 }, {
@@ -109,30 +109,30 @@ const { filters, hasFilters, resetFilters } = useReactiveFilters<GetLeadsFilters
 })
 
 // Query
-const getLeadsQuery = getLeadsQueryFactory()
-const { data: leads, refresh, isLoading, isFetching, pagination } = getLeadsQuery(filters)
+const getPostsQuery = getPostsQueryFactory()
+const { data: posts, refresh, isLoading, isFetching, pagination } = getPostsQuery(filters)
 
 // Actions
-const deleteLeadAction = deleteLeadActionFactory()
+const deletePostAction = deletePostActionFactory()
 
 // Slideovers
-const { open: openCreateSlideover } = useSlideover('create-lead')
-const { open: openUpdateSlideover } = useSlideover('update-lead')
+const { open: openCreateSlideover } = useSlideover('create-post')
+const { open: openUpdateSlideover } = useSlideover('update-post')
 
 // Delete handling
-const deleteLeads = async (items: Lead[]) => {
-  for (const lead of items) {
-    await deleteLeadAction(lead)
+const deletePosts = async (items: Post[]) => {
+  for (const post of items) {
+    await deletePostAction(post)
   }
   refresh()
 }
 
 // Row actions
-const tableRowActions = computed(() => (row: Row<Lead>) => [
-  { label: 'View lead', to: `/leads/${row.original.ulid}` },
-  { label: 'View contact', to: `/contacts/${row.original.contact.ulid}` },
-  { label: 'Edit lead', onSelect: () => openUpdateSlideover({ lead: row.original }) },
-  { label: 'Delete lead', onSelect: () => deleteLeads([row.original]) },
+const tableRowActions = computed(() => (row: Row<Post>) => [
+  { label: 'View post', to: `/posts/${row.original.ulid}` },
+  { label: 'View author', to: `/users/${row.original.author.ulid}` },
+  { label: 'Edit post', onSelect: () => openUpdateSlideover({ post: row.original }) },
+  { label: 'Delete post', onSelect: () => deletePosts([row.original]) },
 ])
 </script>
 
@@ -148,7 +148,7 @@ const tableRowActions = computed(() => (row: Row<Lead>) => [
 
       <USelect
         v-model="filters.status"
-        :options="LeadStatus.values()"
+        :options="PostStatus.values()"
         placeholder="Status"
         option-attribute="text"
       />
@@ -164,9 +164,9 @@ const tableRowActions = computed(() => (row: Row<Lead>) => [
       <div class="flex-1" />
 
       <UButton
-        v-if="can(CreateLead)"
+        v-if="can(CreatePost)"
         icon="i-heroicons-plus"
-        label="Create Lead"
+        label="Create Post"
         @click="openCreateSlideover()"
       />
     </div>
@@ -175,12 +175,12 @@ const tableRowActions = computed(() => (row: Row<Lead>) => [
     <LoadingLine v-if="isFetching" />
 
     <!-- Table -->
-    <LeadsTable
-      :leads="leads?.data || []"
+    <PostsTable
+      :posts="posts?.data || []"
       :loading="isLoading"
       :fetching="isFetching"
       :row-actions="tableRowActions"
-      @delete="deleteLeads"
+      @delete="deletePosts"
     />
 
     <!-- Pagination -->
@@ -192,8 +192,8 @@ const tableRowActions = computed(() => (row: Row<Lead>) => [
     />
 
     <!-- Slideovers -->
-    <CreateLeadSlideover @close="refresh" />
-    <UpdateLeadSlideover @close="refresh" />
+    <CreatePostSlideover @close="refresh" />
+    <UpdatePostSlideover @close="refresh" />
   </div>
 </template>
 ```
@@ -203,15 +203,15 @@ const tableRowActions = computed(() => (row: Row<Lead>) => [
 ## Complete Detail Page
 
 ```vue
-<!-- app/pages/leads/[ulid].vue -->
+<!-- app/pages/posts/[ulid].vue -->
 <script lang="ts" setup>
-import getLeadQueryFactory from '~/features/leads/queries/get-lead-query'
-import deleteLeadActionFactory from '~/features/leads/actions/delete-lead-action'
-import { ShowLead, UpdateLead, DeleteLead } from '~/constants/permissions'
+import getPostQueryFactory from '~/features/posts/queries/get-post-query'
+import deletePostActionFactory from '~/features/posts/actions/delete-post-action'
+import { ShowPost, UpdatePost, DeletePost } from '~/constants/permissions'
 
 // Page meta
 definePageMeta({
-  permissions: ShowLead,
+  permissions: ShowPost,
 })
 
 // Route params
@@ -220,32 +220,32 @@ const router = useRouter()
 const ulid = computed(() => route.params.ulid as string)
 
 // Query
-const getLeadQuery = getLeadQueryFactory()
-const { data: lead, isLoading, refresh } = getLeadQuery(ulid)
+const getPostQuery = getPostQueryFactory()
+const { data: post, isLoading, refresh } = getPostQuery(ulid)
 
 // Actions
-const deleteLeadAction = deleteLeadActionFactory()
+const deletePostAction = deletePostActionFactory()
 
 // Page header (reactive)
 const { setAppHeader } = useAppHeader()
-watch(lead, (l) => {
-  if (l) {
+watch(post, (p) => {
+  if (p) {
     setAppHeader({
-      title: l.data.contact.name,
-      subtitle: l.data.demand,
-      icon: 'lucide:briefcase',
+      title: p.data.title,
+      subtitle: p.data.author.name,
+      icon: 'lucide:file-text',
     })
   }
 }, { immediate: true })
 
 // Breadcrumbs (reactive)
 const { setBreadcrumbs } = useBreadcrumbs()
-watch(lead, (l) => {
-  if (l) {
+watch(post, (p) => {
+  if (p) {
     setBreadcrumbs([
-      { label: 'Lead Management' },
-      { label: 'Leads', to: '/leads' },
-      { label: l.data.contact.name },
+      { label: 'Content' },
+      { label: 'Posts', to: '/posts' },
+      { label: p.data.title },
     ])
   }
 }, { immediate: true })
@@ -254,35 +254,30 @@ watch(lead, (l) => {
 const tabs = computed(() => [
   { label: 'Details', slot: 'details' },
   {
-    label: 'Secure Links',
-    slot: 'secure-links',
-    badge: lead.value?.data.secureLinksCount,
+    label: 'Comments',
+    slot: 'comments',
+    badge: post.value?.data.commentsCount,
   },
   {
-    label: 'Insights',
-    slot: 'insights',
-    badge: lead.value?.data.insightsCount,
-  },
-  {
-    label: 'Conversations',
-    slot: 'conversations',
-    badge: lead.value?.data.conversationsCount,
+    label: 'Tags',
+    slot: 'tags',
+    badge: post.value?.data.tagsCount,
   },
 ])
 
 // Slideover
-const { open: openEditSlideover } = useSlideover('edit-lead')
+const { open: openEditSlideover } = useSlideover('edit-post')
 
 // Delete
 const handleDelete = async () => {
-  if (!lead.value) return
-  await deleteLeadAction(lead.value.data)
-  router.push('/leads')
+  if (!post.value) return
+  await deletePostAction(post.value.data)
+  router.push('/posts')
 }
 
 // Real-time updates
 const { privateChannel } = useRealtime()
-privateChannel(Lead, ulid.value).on(LeadUpdated, refresh)
+privateChannel(Post, ulid.value).on(PostUpdated, refresh)
 </script>
 
 <template>
@@ -291,17 +286,17 @@ privateChannel(Lead, ulid.value).on(LeadUpdated, refresh)
     <USkeleton v-if="isLoading" class="h-96" />
 
     <!-- Content -->
-    <div v-else-if="lead">
+    <div v-else-if="post">
       <!-- Actions -->
       <div class="flex gap-2 mb-4">
         <UButton
-          v-if="can(UpdateLead)"
-          @click="openEditSlideover({ lead: lead.data })"
+          v-if="can(UpdatePost)"
+          @click="openEditSlideover({ post: post.data })"
         >
           Edit
         </UButton>
         <UButton
-          v-if="can(DeleteLead)"
+          v-if="can(DeletePost)"
           color="error"
           @click="handleDelete"
         >
@@ -312,25 +307,21 @@ privateChannel(Lead, ulid.value).on(LeadUpdated, refresh)
       <!-- Tabs -->
       <UTabs :items="tabs">
         <template #details>
-          <LeadDetail :lead="lead.data" />
+          <PostDetail :post="post.data" />
         </template>
 
-        <template #secure-links>
-          <LeadSecureLinksTab :lead="lead.data" />
+        <template #comments>
+          <PostCommentsTab :post="post.data" />
         </template>
 
-        <template #insights>
-          <LeadInsightsTab :lead="lead.data" />
-        </template>
-
-        <template #conversations>
-          <ConversationTab :conversations="lead.data.conversations" />
+        <template #tags>
+          <PostTagsTab :post="post.data" />
         </template>
       </UTabs>
     </div>
 
     <!-- Slideover -->
-    <UpdateLeadSlideover @close="refresh" />
+    <UpdatePostSlideover @close="refresh" />
   </div>
 </template>
 ```
@@ -401,9 +392,9 @@ const { breadcrumbs } = useBreadcrumbs()
 const { setAppHeader, appHeader } = useAppHeader()
 
 setAppHeader({
-  title: 'Leads',
-  subtitle: 'Manage your leads',
-  icon: 'lucide:briefcase',
+  title: 'Posts',
+  subtitle: 'Manage your posts',
+  icon: 'lucide:file-text',
 })
 ```
 
@@ -413,9 +404,9 @@ setAppHeader({
 const { setBreadcrumbs, breadcrumbs } = useBreadcrumbs()
 
 setBreadcrumbs([
-  { label: 'Lead Management' },
-  { label: 'Leads', to: '/leads' },
-  { label: 'John Doe' },
+  { label: 'Content' },
+  { label: 'Posts', to: '/posts' },
+  { label: 'My Post' },
 ])
 ```
 
@@ -426,9 +417,9 @@ setBreadcrumbs([
 ```vue
 <!-- app/pages/index.vue -->
 <script lang="ts" setup>
-// Redirect to leads on root
+// Redirect to posts on root
 definePageMeta({
-  redirect: '/leads',
+  redirect: '/posts',
 })
 </script>
 ```

@@ -14,19 +14,19 @@ Data access layer with CRUD operations and automatic model hydration.
 ## Basic Repository
 
 ```typescript
-// app/repositories/LeadRepository.ts
+// app/repositories/PostRepository.ts
 import { BaseRepository } from '#layers/base/app/repositories/base-repository'
 import { ModelHydrator } from '#layers/base/app/repositories/hydrators/model-hydrator'
-import Lead from '~/models/Lead'
+import Post from '~/models/Post'
 
-export default class LeadRepository extends BaseRepository<Lead> {
-  protected resource = '/lead-management/leads'
+export default class PostRepository extends BaseRepository<Post> {
+  protected resource = '/api/posts'
   protected hydration = true
-  protected hydrator = new ModelHydrator(Lead)
+  protected hydrator = new ModelHydrator(Post)
 
   // Custom method
-  async listByContact(contactUlid: string) {
-    return this.jsonGet(`/lead-management/contacts/${contactUlid}/leads`)
+  async listByAuthor(authorUlid: string) {
+    return this.jsonGet(`/api/authors/${authorUlid}/posts`)
   }
 }
 ```
@@ -37,8 +37,8 @@ export default class LeadRepository extends BaseRepository<Lead> {
 // app/app.config.ts
 export default defineAppConfig({
   repositories: {
-    leads: LeadRepository,
-    contacts: ContactRepository,
+    posts: PostRepository,
+    authors: AuthorRepository,
   },
 })
 ```
@@ -47,18 +47,18 @@ export default defineAppConfig({
 
 ```typescript
 // Get typed repository instance
-const leadApi = useRepository('leads')
+const postApi = useRepository('posts')
 
 // CRUD operations (returns hydrated models)
-const { data: leads } = await leadApi.list()
-const { data: lead } = await leadApi.get('ulid123')
-const { data: newLead } = await leadApi.create({ name: 'John' })
-await leadApi.update('ulid123', { name: 'Jane' })
-await leadApi.delete('ulid123')
+const { data: posts } = await postApi.list()
+const { data: post } = await postApi.get('ulid123')
+const { data: newPost } = await postApi.create({ title: 'Hello' })
+await postApi.update('ulid123', { title: 'Updated' })
+await postApi.delete('ulid123')
 
 // With query params
-const { data: leads } = await leadApi.list({
-  include: 'contact,secure-links',
-  filter: { status: 'new lead' },
+const { data: posts } = await postApi.list({
+  include: 'author,comments',
+  filter: { status: 'published' },
 })
 ```

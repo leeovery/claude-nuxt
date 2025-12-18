@@ -17,19 +17,19 @@ useFilterQuery(key, fetcher, filters)
 ## Basic Query (No Filters)
 
 ```typescript
-// app/features/leads/queries/get-lead-query.ts
+// app/features/posts/queries/get-post-query.ts
 import type { MaybeRef } from 'vue'
 
-export default function getLeadQueryFactory() {
-  const leadApi = useRepository('leads')
+export default function getPostQueryFactory() {
+  const postApi = useRepository('posts')
 
   return (ulid: MaybeRef<string>) => {
-    return useQuery(`lead-${toValue(ulid)}`, () => {
+    return useQuery(`post-${toValue(ulid)}`, () => {
       const params = useJsonSpec()
-        .include('contact', 'secure-links', 'insights', 'conversations')
+        .include('author', 'comments', 'tags')
         .build()
 
-      return leadApi.get(toValue(ulid), params)
+      return postApi.get(toValue(ulid), params)
     })
   }
 }
@@ -39,11 +39,11 @@ export default function getLeadQueryFactory() {
 
 ```typescript
 const ulid = computed(() => route.params.ulid as string)
-const getLeadQuery = getLeadQueryFactory()
-const { data: lead, isLoading, refresh } = getLeadQuery(ulid)
+const getPostQuery = getPostQueryFactory()
+const { data: post, isLoading, refresh } = getPostQuery(ulid)
 
 // Access data
-lead.value?.data.contact.name
+post.value?.data.author.name
 ```
 
 ---
@@ -51,29 +51,29 @@ lead.value?.data.contact.name
 ## Filter Query (Auto-Refetch)
 
 ```typescript
-// app/features/leads/queries/get-leads-query.ts
+// app/features/posts/queries/get-posts-query.ts
 import type { Filters } from '#layers/base/app/types'
 import type { MaybeRef } from 'vue'
 import { KebabCase } from '#layers/base/app/utils'
 
 // Define filter interface
-export interface GetLeadsFilters extends Pick<Filters, 'page' | 'size' | 'search'> {
+export interface GetPostsFilters extends Pick<Filters, 'page' | 'size' | 'search'> {
   status?: string
-  testFlag?: boolean
+  isDraft?: boolean
 }
 
-export default function getLeadsQueryFactory() {
-  const leadApi = useRepository('leads')
+export default function getPostsQueryFactory() {
+  const postApi = useRepository('posts')
 
-  return (filters: MaybeRef<GetLeadsFilters>) => {
-    return useFilterQuery('leads', () => {
+  return (filters: MaybeRef<GetPostsFilters>) => {
+    return useFilterQuery('posts', () => {
       // Build JSON:API spec params
       const params = useJsonSpec()
         .filters(filters, KebabCase)           // Apply filters
-        .include('secure-links', 'contact')     // Include relations
+        .include('author', 'tags')              // Include relations
         .build()
 
-      return leadApi.list(params)
+      return postApi.list(params)
     }, filters)
   }
 }
@@ -83,20 +83,20 @@ export default function getLeadsQueryFactory() {
 
 ```typescript
 // Set up reactive filters
-const { filters } = useReactiveFilters<GetLeadsFilters>({
+const { filters } = useReactiveFilters<GetPostsFilters>({
   status: undefined,
-  testFlag: undefined,
+  isDraft: undefined,
   page: 1,
   size: 25,
 })
 
 // Create query
-const getLeadsQuery = getLeadsQueryFactory()
-const { data: leads, refresh, isLoading, isFetching, pagination } = getLeadsQuery(filters)
+const getPostsQuery = getPostsQueryFactory()
+const { data: posts, refresh, isLoading, isFetching, pagination } = getPostsQuery(filters)
 
 // Data auto-refetches when filters change
-filters.status = 'new lead'  // Triggers refetch
-filters.page = 2             // Triggers refetch
+filters.status = 'published'  // Triggers refetch
+filters.page = 2              // Triggers refetch
 ```
 
 ---
@@ -111,16 +111,16 @@ const params = useJsonSpec()
   .filters(filters, KebabCase)
 
   // Include relations
-  .include('contact', 'secure-links')
+  .include('author', 'comments')
 
   // Or include as array
-  .include(['contact', 'secure-links'])
+  .include(['author', 'comments'])
 
   // Sort
-  .sort('-created_at', 'name')
+  .sort('-created_at', 'title')
 
   // Sparse fieldsets
-  .fields('leads', ['ulid', 'status', 'created_at'])
+  .fields('posts', ['ulid', 'title', 'created_at'])
 
   // Build final params object
   .build()
@@ -129,7 +129,7 @@ const params = useJsonSpec()
 ### Filter Transformation
 
 ```typescript
-// KebabCase transforms filter keys: testFlag → test-flag
+// KebabCase transforms filter keys: isDraft → is-draft
 .filters(filters, KebabCase)
 
 // No transformation
@@ -151,7 +151,7 @@ const {
   error,       // Error if failed
   refresh,     // Manual refresh function
   pagination,  // Pagination metadata (if paginated)
-} = getLeadsQuery(filters)
+} = getPostsQuery(filters)
 ```
 
 ### Pagination Object
@@ -171,72 +171,72 @@ pagination: {
 
 ## Complete Query Examples
 
-### Leads by Contact
+### Posts by Author
 
 ```typescript
-// app/features/leads/queries/get-leads-by-contact-query.ts
-export interface GetLeadsByContactFilters extends Pick<Filters, 'page' | 'size'> {
+// app/features/posts/queries/get-posts-by-author-query.ts
+export interface GetPostsByAuthorFilters extends Pick<Filters, 'page' | 'size'> {
   status?: string
 }
 
-export default function getLeadsByContactQueryFactory() {
-  const leadApi = useRepository('leads')
+export default function getPostsByAuthorQueryFactory() {
+  const postApi = useRepository('posts')
 
-  return (contactUlid: MaybeRef<string>, filters: MaybeRef<GetLeadsByContactFilters>) => {
-    return useFilterQuery(`leads-by-contact-${toValue(contactUlid)}`, () => {
+  return (authorUlid: MaybeRef<string>, filters: MaybeRef<GetPostsByAuthorFilters>) => {
+    return useFilterQuery(`posts-by-author-${toValue(authorUlid)}`, () => {
       const params = useJsonSpec()
         .filters(filters, KebabCase)
-        .include('secure-links')
+        .include('tags')
         .build()
 
-      return leadApi.listByContact(toValue(contactUlid), params)
+      return postApi.listByAuthor(toValue(authorUlid), params)
     }, filters)
   }
 }
 ```
 
-### Contacts with Search
+### Users with Search
 
 ```typescript
-// app/features/contacts/queries/get-contacts-query.ts
-export interface GetContactsFilters extends Pick<Filters, 'page' | 'size' | 'search'> {}
+// app/features/users/queries/get-users-query.ts
+export interface GetUsersFilters extends Pick<Filters, 'page' | 'size' | 'search'> {}
 
-export default function getContactsQueryFactory() {
-  const contactApi = useRepository('contacts')
+export default function getUsersQueryFactory() {
+  const userApi = useRepository('users')
 
-  return (filters: MaybeRef<GetContactsFilters>) => {
-    return useFilterQuery('contacts', () => {
+  return (filters: MaybeRef<GetUsersFilters>) => {
+    return useFilterQuery('users', () => {
       const params = useJsonSpec()
         .filters(filters, KebabCase)
-        .include('leads')
+        .include('posts')
         .build()
 
-      return contactApi.list(params)
+      return userApi.list(params)
     }, filters)
   }
 }
 ```
 
-### Evaluations by Status
+### Comments by Status
 
 ```typescript
-// app/features/evaluations/queries/get-evaluations-query.ts
-export interface GetEvaluationsFilters extends Pick<Filters, 'page' | 'size'> {
+// app/features/comments/queries/get-comments-query.ts
+export interface GetCommentsFilters extends Pick<Filters, 'page' | 'size'> {
   status?: string
-  reviewStatus?: string
+  approved?: boolean
 }
 
-export default function getEvaluationsQueryFactory() {
-  const evalApi = useRepository('evaluations')
+export default function getCommentsQueryFactory() {
+  const commentApi = useRepository('comments')
 
-  return (filters: MaybeRef<GetEvaluationsFilters>) => {
-    return useFilterQuery('evaluations', () => {
+  return (filters: MaybeRef<GetCommentsFilters>) => {
+    return useFilterQuery('comments', () => {
       const params = useJsonSpec()
         .filters(filters, KebabCase)
         .sort('-created_at')
         .build()
 
-      return evalApi.list(params)
+      return commentApi.list(params)
     }, filters)
   }
 }
@@ -248,12 +248,12 @@ export default function getEvaluationsQueryFactory() {
 
 ```vue
 <script lang="ts" setup>
-import getLeadsQueryFactory, { type GetLeadsFilters } from '~/features/leads/queries/get-leads-query'
+import getPostsQueryFactory, { type GetPostsFilters } from '~/features/posts/queries/get-posts-query'
 
 // Set up filters
-const { filters, hasFilters, resetFilters } = useReactiveFilters<GetLeadsFilters>({
+const { filters, hasFilters, resetFilters } = useReactiveFilters<GetPostsFilters>({
   status: undefined,
-  testFlag: undefined,
+  isDraft: undefined,
   page: 1,
   size: 25,
 }, {
@@ -261,8 +261,8 @@ const { filters, hasFilters, resetFilters } = useReactiveFilters<GetLeadsFilters
 })
 
 // Create query
-const getLeadsQuery = getLeadsQueryFactory()
-const { data: leads, refresh, isLoading, isFetching, pagination } = getLeadsQuery(filters)
+const getPostsQuery = getPostsQueryFactory()
+const { data: posts, refresh, isLoading, isFetching, pagination } = getPostsQuery(filters)
 </script>
 
 <template>
@@ -274,7 +274,7 @@ const { data: leads, refresh, isLoading, isFetching, pagination } = getLeadsQuer
     <USelect v-model="filters.status" :options="statusOptions" />
 
     <!-- Data -->
-    <LeadsTable :leads="leads?.data || []" :loading="isLoading" />
+    <PostsTable :posts="posts?.data || []" :loading="isLoading" />
 
     <!-- Pagination -->
     <XPagination v-if="pagination" v-model:page="filters.page" :pagination="pagination" />

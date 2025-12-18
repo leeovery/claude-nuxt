@@ -26,52 +26,52 @@ Component → Action → Mutation → Repository → API
 ```
 features/{domain}/
 ├── queries/
-│   ├── get-leads-query.ts      # List with filters
-│   └── get-lead-query.ts       # Single item
+│   ├── get-posts-query.ts      # List with filters
+│   └── get-post-query.ts       # Single item
 ├── mutations/
-│   ├── create-lead-mutation.ts
-│   ├── update-lead-mutation.ts
-│   └── delete-lead-mutation.ts
+│   ├── create-post-mutation.ts
+│   ├── update-post-mutation.ts
+│   └── delete-post-mutation.ts
 └── actions/
-    ├── create-lead-action.ts
-    ├── update-lead-action.ts
-    └── delete-lead-action.ts
+    ├── create-post-action.ts
+    ├── update-post-action.ts
+    └── delete-post-action.ts
 ```
 
 ## Quick Examples
 
 **Query** - Reactive data fetching:
 ```typescript
-export default function getLeadsQueryFactory() {
-  const leadApi = useRepository('leads')
-  return (filters: MaybeRef<GetLeadsFilters>) => {
-    return useFilterQuery('leads', () => leadApi.list(params), filters)
+export default function getPostsQueryFactory() {
+  const postApi = useRepository('posts')
+  return (filters: MaybeRef<GetPostsFilters>) => {
+    return useFilterQuery('posts', () => postApi.list(params), filters)
   }
 }
 ```
 
 **Mutation** - Pure API call:
 ```typescript
-export default function createLeadMutationFactory() {
-  const leadApi = useRepository('leads')
+export default function createPostMutationFactory() {
+  const postApi = useRepository('posts')
   const { start, stop, waitingFor } = useWait()
-  return async (data: CreateLeadData) => {
-    start(waitingFor.leads.creating)
-    try { return (await leadApi.create(data)).data }
-    finally { stop(waitingFor.leads.creating) }
+  return async (data: CreatePostData) => {
+    start(waitingFor.posts.creating)
+    try { return (await postApi.create(data)).data }
+    finally { stop(waitingFor.posts.creating) }
   }
 }
 ```
 
 **Action** - Business logic + UI:
 ```typescript
-export default function createLeadActionFactory() {
-  const createLead = createLeadMutationFactory()
+export default function createPostActionFactory() {
+  const createPost = createPostMutationFactory()
   const flash = useFlash()
-  return async (data: CreateLeadData) => {
-    const lead = await createLead(data)
-    flash.success('Lead created!')
-    return lead
+  return async (data: CreatePostData) => {
+    const post = await createPost(data)
+    flash.success('Post created!')
+    return post
   }
 }
 ```

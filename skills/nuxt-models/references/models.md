@@ -12,29 +12,29 @@ import Model from '#layers/base/app/models/Model'
 
 ```typescript
 // Hydrate single instance from data
-const lead = Lead.hydrate(apiData)
+const post = Post.hydrate(apiData)
 
 // Hydrate collection from array
-const leads = Lead.collect(apiDataArray)
+const posts = Post.collect(apiDataArray)
 
 // Create instance (alias for hydrate)
-const lead = Lead.instance(data)
+const post = Post.instance(data)
 ```
 
 ### Instance Methods
 
 ```typescript
 // Compare by primary key
-lead.is(otherLead)  // true if same primary key
+post.is(otherPost)  // true if same primary key
 
 // Clone instance
-const copy = lead.clone()
+const copy = post.clone()
 ```
 
 ### Override Methods
 
 ```typescript
-class Lead extends Model {
+class Post extends Model {
   // Custom primary key (default: 'id')
   public override primaryKey(): string {
     return 'ulid'
@@ -47,12 +47,12 @@ class Lead extends Model {
 
   // Define property casts
   public override casts(): Record<string, Castable> {
-    return { status: LeadStatus, createdAt: DateValue }
+    return { status: PostStatus, createdAt: DateValue }
   }
 
   // Define model relations
   public override relations(): Record<string, typeof Model> {
-    return { contact: Contact, insights: Insight }
+    return { author: Author, comments: Comment }
   }
 
   // Strict mode (default: true) - only assign declared properties
@@ -65,7 +65,7 @@ class Lead extends Model {
 ### Lifecycle Hooks
 
 ```typescript
-class Lead extends Model {
+class Post extends Model {
   // Before hydration
   public override booting(): void {
     // Called before property assignment
@@ -106,36 +106,34 @@ Model Instance Ready
 ## Complete Model Example
 
 ```typescript
-// app/models/Lead.ts
+// app/models/Post.ts
 import Model from '#layers/base/app/models/Model'
 import type { Castable } from '#layers/base/app/types'
-import LeadStatus from '~/enums/LeadStatus'
+import PostStatus from '~/enums/PostStatus'
 import DateValue from '~/values/DateValue'
-import Contact from '~/models/Contact'
-import SecureLink from '~/models/SecureLink'
-import Insight from '~/models/Insight'
-import Conversation from '~/models/Conversation'
+import Author from '~/models/Author'
+import Comment from '~/models/Comment'
+import Tag from '~/models/Tag'
 
-export default class Lead extends Model {
+export default class Post extends Model {
   // Scalar properties
   ulid: string
-  demand: string
-  testFlag: boolean
+  title: string
+  content: string
+  isDraft: boolean
 
   // Cast properties (from enums/values)
-  status: LeadStatus
-  callScheduledAt: DateValue
+  status: PostStatus
+  publishedAt: DateValue
   createdAt: DateValue
   updatedAt: DateValue
 
   // Relation properties
-  contact: Contact
-  insights?: Insight[]
-  insightsCount?: number
-  secureLinks?: SecureLink[]
-  secureLinksCount?: number
-  conversations?: Conversation[]
-  conversationsCount?: number
+  author: Author
+  comments?: Comment[]
+  commentsCount?: number
+  tags?: Tag[]
+  tagsCount?: number
 
   // Custom primary key
   public override primaryKey(): string {
@@ -145,8 +143,8 @@ export default class Lead extends Model {
   // Define casts
   public override casts(): Record<string, Castable> {
     return {
-      status: LeadStatus,
-      callScheduledAt: DateValue,
+      status: PostStatus,
+      publishedAt: DateValue,
       createdAt: DateValue,
       updatedAt: DateValue,
     }
@@ -155,24 +153,23 @@ export default class Lead extends Model {
   // Define relations
   public override relations(): Record<string, typeof Model> {
     return {
-      contact: Contact,
-      insights: Insight,
-      secureLinks: SecureLink,
-      conversations: Conversation,
+      author: Author,
+      comments: Comment,
+      tags: Tag,
     }
   }
 
   // Instance methods
-  public isTest(): boolean {
-    return this.testFlag
+  public isPublished(): boolean {
+    return !this.isDraft
   }
 
-  public hasSecureLinks(): boolean {
-    return (this.secureLinksCount ?? 0) > 0
+  public hasComments(): boolean {
+    return (this.commentsCount ?? 0) > 0
   }
 
-  public hasInsights(): boolean {
-    return (this.insightsCount ?? 0) > 0
+  public hasTags(): boolean {
+    return (this.tagsCount ?? 0) > 0
   }
 }
 ```
@@ -184,12 +181,12 @@ export default class Lead extends Model {
 ### One-to-One
 
 ```typescript
-// Contact is a single related model
-contact: Contact
+// Author is a single related model
+author: Author
 
 relations(): Record<string, typeof Model> {
   return {
-    contact: Contact,  // Hydrates as Contact instance
+    author: Author,  // Hydrates as Author instance
   }
 }
 ```
@@ -197,12 +194,12 @@ relations(): Record<string, typeof Model> {
 ### One-to-Many
 
 ```typescript
-// Insights is an array of related models
-insights?: Insight[]
+// Comments is an array of related models
+comments?: Comment[]
 
 relations(): Record<string, typeof Model> {
   return {
-    insights: Insight,  // Hydrates each item as Insight instance
+    comments: Comment,  // Hydrates each item as Comment instance
   }
 }
 ```
@@ -212,9 +209,9 @@ relations(): Record<string, typeof Model> {
 API often returns counts alongside relations:
 
 ```typescript
-// From API: { insights: [...], insights_count: 5 }
-insights?: Insight[]
-insightsCount?: number
+// From API: { comments: [...], comments_count: 5 }
+comments?: Comment[]
+commentsCount?: number
 ```
 
 The count is a scalar - no relation definition needed.
@@ -233,9 +230,9 @@ interface Castable {
 }
 
 // Implementation
-class LeadStatus extends Enum implements Castable {
-  static cast(value: string): LeadStatus {
-    return LeadStatus.coerce(value)
+class PostStatus extends Enum implements Castable {
+  static cast(value: string): PostStatus {
+    return PostStatus.coerce(value)
   }
 }
 ```
@@ -244,23 +241,23 @@ class LeadStatus extends Enum implements Castable {
 
 ```typescript
 // Enums - extend Enum base class
-status: LeadStatus
+status: PostStatus
 
 // Value objects - implement Castable
 createdAt: DateValue
-scheduledFor: DateValue
+publishedAt: DateValue
 ```
 
 ### Nullable Casts
 
 ```typescript
 // If property might be null, make it optional
-callScheduledAt?: DateValue
+publishedAt?: DateValue
 
 // The cast still works - undefined/null values skip casting
 casts(): Record<string, Castable> {
   return {
-    callScheduledAt: DateValue,  // Only casts if value exists
+    publishedAt: DateValue,  // Only casts if value exists
   }
 }
 ```
@@ -278,7 +275,7 @@ import { camelCase } from 'change-case'
 export default class User extends Model {
   uuid: string
   sessionId: string      // From API: session_id
-  conversationId: string // From API: conversation_id
+  organizationId: string // From API: organization_id
 
   public override transform<D>(data: D): D {
     return transformKeys(data, camelCase)
@@ -314,15 +311,15 @@ export default class User extends Model {
 ## Simple Model (No Relations)
 
 ```typescript
-// app/models/Insight.ts
+// app/models/Tag.ts
 import Model from '#layers/base/app/models/Model'
 import type { Castable } from '#layers/base/app/types'
 import DateValue from '~/values/DateValue'
 
-export default class Insight extends Model {
+export default class Tag extends Model {
   ulid: string
-  category: string
-  summary: string
+  name: string
+  slug: string
   createdAt: DateValue
 
   public override primaryKey(): string {
@@ -345,20 +342,20 @@ export default class Insight extends Model {
 
 ```typescript
 // Repositories with hydration enabled return model instances
-const leadApi = useRepository('leads')
-const { data: lead } = await leadApi.get('ulid123')
+const postApi = useRepository('posts')
+const { data: post } = await postApi.get('ulid123')
 
-// lead is already a Lead instance
-lead.status.color()
-lead.contact.name
+// post is already a Post instance
+post.status.color()
+post.author.name
 ```
 
 ### Manual Hydration
 
 ```typescript
 // When you have raw data
-const rawData = { ulid: '...', status: 'new lead', ... }
-const lead = Lead.hydrate(rawData)
+const rawData = { ulid: '...', status: 'published', ... }
+const post = Post.hydrate(rawData)
 ```
 
 ### Collection Hydration
@@ -366,10 +363,10 @@ const lead = Lead.hydrate(rawData)
 ```typescript
 // Hydrate array of items
 const rawArray = [{ ... }, { ... }]
-const leads = Lead.collect(rawArray)
+const posts = Post.collect(rawArray)
 
-leads.forEach(lead => {
-  console.log(lead.status.color())
+posts.forEach(post => {
+  console.log(post.status.color())
 })
 ```
 
@@ -377,12 +374,12 @@ leads.forEach(lead => {
 
 ```typescript
 // Compare by primary key
-if (selectedLead.is(lead)) {
-  // Same lead
+if (selectedPost.is(post)) {
+  // Same post
 }
 
 // Find in array
-const found = leads.find(l => l.is(targetLead))
+const found = posts.find(p => p.is(targetPost))
 ```
 
 ---
@@ -391,10 +388,10 @@ const found = leads.find(l => l.is(targetLead))
 
 | Convention | Example |
 |------------|---------|
-| File name | PascalCase: `Lead.ts`, `SecureLink.ts` |
-| Class name | PascalCase: `Lead`, `SecureLink` |
-| Properties | camelCase: `createdAt`, `secureLinks` |
-| Relations | camelCase, matches property: `contact`, `insights` |
+| File name | PascalCase: `Post.ts`, `Author.ts` |
+| Class name | PascalCase: `Post`, `Author` |
+| Properties | camelCase: `createdAt`, `commentsCount` |
+| Relations | camelCase, matches property: `author`, `comments` |
 
 ---
 

@@ -29,43 +29,26 @@ export default function {verb}{Entity}ActionFactory() {
 
 ## Complete Action Examples
 
-### Create Lead Action
+### Create Post Action
 
 ```typescript
-// app/features/leads/actions/create-lead-action.ts
-import createLeadMutationFactory, { type CreateLeadData } from '../mutations/create-lead-mutation'
-import type Lead from '~/models/Lead'
+// app/features/posts/actions/create-post-action.ts
+import createPostMutationFactory, { type CreatePostData } from '../mutations/create-post-mutation'
+import type Post from '~/models/Post'
 
-export default function createLeadActionFactory() {
-  const createLead = createLeadMutationFactory()
-  const { copy } = useClipboard()
+export default function createPostActionFactory() {
+  const createPost = createPostMutationFactory()
   const flash = useFlash()
-  const { trigger } = useConfirmationToast()
   const { handleActionError } = useHandleActionError()
 
-  return async (data: CreateLeadData): Promise<Lead> => {
+  return async (data: CreatePostData): Promise<Post> => {
     try {
-      const lead = await createLead(data)
-      flash.success('Lead created successfully.')
-
-      // Show confirmation with secure link if created
-      if (lead.hasSecureLinks()) {
-        const linkUrl = lead.secureLinks![0]!.fullUrl()
-        trigger({
-          title: 'The following link was sent to the customer',
-          description: linkUrl,
-          confirmLabel: 'Copy link',
-          onConfirm: async () => {
-            await copy(linkUrl)
-            flash.success('Link copied to clipboard')
-          },
-        })
-      }
-
-      return lead
+      const post = await createPost(data)
+      flash.success('Post created successfully.')
+      return post
     } catch (error) {
       throw handleActionError(error, {
-        entity: 'lead',
+        entity: 'post',
         operation: 'create',
       })
     }
@@ -73,26 +56,26 @@ export default function createLeadActionFactory() {
 }
 ```
 
-### Update Lead Action
+### Update Post Action
 
 ```typescript
-// app/features/leads/actions/update-lead-action.ts
-import updateLeadMutationFactory, { type UpdateLeadData } from '../mutations/update-lead-mutation'
-import type Lead from '~/models/Lead'
+// app/features/posts/actions/update-post-action.ts
+import updatePostMutationFactory, { type UpdatePostData } from '../mutations/update-post-mutation'
+import type Post from '~/models/Post'
 
-export default function updateLeadActionFactory() {
-  const updateLead = updateLeadMutationFactory()
+export default function updatePostActionFactory() {
+  const updatePost = updatePostMutationFactory()
   const flash = useFlash()
   const { handleActionError } = useHandleActionError()
 
-  return async (ulid: string, data: UpdateLeadData): Promise<Lead> => {
+  return async (ulid: string, data: UpdatePostData): Promise<Post> => {
     try {
-      const lead = await updateLead(ulid, data)
-      flash.success('Lead updated successfully.')
-      return lead
+      const post = await updatePost(ulid, data)
+      flash.success('Post updated successfully.')
+      return post
     } catch (error) {
       throw handleActionError(error, {
-        entity: 'lead',
+        entity: 'post',
         operation: 'update',
       })
     }
@@ -100,25 +83,25 @@ export default function updateLeadActionFactory() {
 }
 ```
 
-### Delete Lead Action
+### Delete Post Action
 
 ```typescript
-// app/features/leads/actions/delete-lead-action.ts
-import deleteLeadMutationFactory from '../mutations/delete-lead-mutation'
-import type Lead from '~/models/Lead'
+// app/features/posts/actions/delete-post-action.ts
+import deletePostMutationFactory from '../mutations/delete-post-mutation'
+import type Post from '~/models/Post'
 
-export default function deleteLeadActionFactory() {
-  const deleteLead = deleteLeadMutationFactory()
+export default function deletePostActionFactory() {
+  const deletePost = deletePostMutationFactory()
   const flash = useFlash()
   const { handleActionError } = useHandleActionError()
 
-  return async (lead: Lead): Promise<void> => {
+  return async (post: Post): Promise<void> => {
     try {
-      await deleteLead(lead.ulid)
-      flash.success('Lead deleted successfully.')
+      await deletePost(post.ulid)
+      flash.success('Post deleted successfully.')
     } catch (error) {
       throw handleActionError(error, {
-        entity: 'lead',
+        entity: 'post',
         operation: 'delete',
       })
     }
@@ -174,11 +157,11 @@ export function useHandleActionError() {
 ```typescript
 catch (error) {
   throw handleActionError(error, {
-    entity: 'lead',
+    entity: 'post',
     operation: 'create',
   })
 }
-// Shows: "Failed to create lead. [error details]"
+// Shows: "Failed to create post. [error details]"
 ```
 
 ---
@@ -186,27 +169,27 @@ catch (error) {
 ## Action with Confirmation
 
 ```typescript
-// app/features/leads/actions/delete-lead-with-confirm-action.ts
-export default function deleteLeadWithConfirmActionFactory() {
-  const deleteLead = deleteLeadMutationFactory()
+// app/features/posts/actions/delete-post-with-confirm-action.ts
+export default function deletePostWithConfirmActionFactory() {
+  const deletePost = deletePostMutationFactory()
   const flash = useFlash()
   const { trigger } = useConfirmationToast()
   const { handleActionError } = useHandleActionError()
 
-  return (lead: Lead): Promise<boolean> => {
+  return (post: Post): Promise<boolean> => {
     return new Promise((resolve) => {
       trigger({
-        title: 'Delete Lead?',
-        description: `Are you sure you want to delete "${lead.contact.name}"?`,
+        title: 'Delete Post?',
+        description: `Are you sure you want to delete "${post.title}"?`,
         confirmLabel: 'Delete',
         cancelLabel: 'Cancel',
         onConfirm: async () => {
           try {
-            await deleteLead(lead.ulid)
-            flash.success('Lead deleted successfully.')
+            await deletePost(post.ulid)
+            flash.success('Post deleted successfully.')
             resolve(true)
           } catch (error) {
-            handleActionError(error, { entity: 'lead', operation: 'delete' })
+            handleActionError(error, { entity: 'post', operation: 'delete' })
             resolve(false)
           }
         },
@@ -222,25 +205,25 @@ export default function deleteLeadWithConfirmActionFactory() {
 ## Action with Navigation
 
 ```typescript
-// app/features/leads/actions/create-and-navigate-action.ts
+// app/features/posts/actions/create-and-navigate-action.ts
 export default function createAndNavigateActionFactory() {
-  const createLead = createLeadMutationFactory()
+  const createPost = createPostMutationFactory()
   const flash = useFlash()
   const router = useRouter()
   const { handleActionError } = useHandleActionError()
 
-  return async (data: CreateLeadData): Promise<Lead> => {
+  return async (data: CreatePostData): Promise<Post> => {
     try {
-      const lead = await createLead(data)
-      flash.success('Lead created successfully.')
+      const post = await createPost(data)
+      flash.success('Post created successfully.')
 
-      // Navigate to new lead
-      await router.push(`/leads/${lead.ulid}`)
+      // Navigate to new post
+      await router.push(`/posts/${post.ulid}`)
 
-      return lead
+      return post
     } catch (error) {
       throw handleActionError(error, {
-        entity: 'lead',
+        entity: 'post',
         operation: 'create',
       })
     }
@@ -253,33 +236,30 @@ export default function createAndNavigateActionFactory() {
 ## Action Orchestrating Multiple Mutations
 
 ```typescript
-// app/features/leads/actions/close-lead-action.ts
-export default function closeLeadActionFactory() {
-  const updateLead = updateLeadMutationFactory()
-  const createInsight = createInsightMutationFactory()
+// app/features/posts/actions/publish-post-action.ts
+export default function publishPostActionFactory() {
+  const updatePost = updatePostMutationFactory()
+  const notifySubscribers = notifySubscribersMutationFactory()
   const flash = useFlash()
   const { handleActionError } = useHandleActionError()
 
-  return async (lead: Lead, closureNotes: string): Promise<Lead> => {
+  return async (post: Post): Promise<Post> => {
     try {
-      // Create closure insight
-      await createInsight({
-        leadUlid: lead.ulid,
-        category: 'closure',
-        summary: closureNotes,
+      // Update post status
+      const updatedPost = await updatePost(post.ulid, {
+        status: 'published',
+        publishedAt: new Date().toISOString(),
       })
 
-      // Update lead status
-      const updatedLead = await updateLead(lead.ulid, {
-        status: 'completed',
-      })
+      // Notify subscribers
+      await notifySubscribers(post.ulid)
 
-      flash.success('Lead closed successfully.')
-      return updatedLead
+      flash.success('Post published successfully.')
+      return updatedPost
     } catch (error) {
       throw handleActionError(error, {
-        entity: 'lead',
-        operation: 'close',
+        entity: 'post',
+        operation: 'publish',
       })
     }
   }
@@ -291,19 +271,19 @@ export default function closeLeadActionFactory() {
 ## Bulk Actions
 
 ```typescript
-// app/features/leads/actions/bulk-delete-action.ts
-export default function bulkDeleteLeadsActionFactory() {
-  const deleteLead = deleteLeadMutationFactory()
+// app/features/posts/actions/bulk-delete-action.ts
+export default function bulkDeletePostsActionFactory() {
+  const deletePost = deletePostMutationFactory()
   const flash = useFlash()
   const { handleActionError } = useHandleActionError()
 
-  return async (leads: Lead[]): Promise<{ success: number; failed: number }> => {
+  return async (posts: Post[]): Promise<{ success: number; failed: number }> => {
     let success = 0
     let failed = 0
 
-    for (const lead of leads) {
+    for (const post of posts) {
       try {
-        await deleteLead(lead.ulid)
+        await deletePost(post.ulid)
         success++
       } catch {
         failed++
@@ -311,7 +291,7 @@ export default function bulkDeleteLeadsActionFactory() {
     }
 
     if (failed === 0) {
-      flash.success(`${success} lead(s) deleted successfully.`)
+      flash.success(`${success} post(s) deleted successfully.`)
     } else {
       flash.warning(`${success} deleted, ${failed} failed.`)
     }
@@ -327,25 +307,24 @@ export default function bulkDeleteLeadsActionFactory() {
 
 ```vue
 <script lang="ts" setup>
-import createLeadActionFactory from '~/features/leads/actions/create-lead-action'
-import type { CreateLeadData } from '~/features/leads/mutations/create-lead-mutation'
+import createPostActionFactory from '~/features/posts/actions/create-post-action'
+import type { CreatePostData } from '~/features/posts/mutations/create-post-mutation'
 
 // Create action instance
-const createLeadAction = createLeadActionFactory()
+const createPostAction = createPostActionFactory()
 
 // Form data
-const formData = ref<CreateLeadData>({
-  email: '',
-  name: '',
-  demand: '',
-  callScheduledAt: '',
-  testFlag: false,
-  sendLoginLink: true,
+const formData = ref<CreatePostData>({
+  title: '',
+  content: '',
+  authorId: '',
+  publishedAt: '',
+  isDraft: true,
 })
 
 // Handle submission
-const onSubmit = async (data: CreateLeadData) => {
-  const lead = await createLeadAction(data)
+const onSubmit = async (data: CreatePostData) => {
+  const post = await createPostAction(data)
   // Action handles success message
   emits('close', true)
 }
@@ -362,11 +341,11 @@ const onSubmit = async (data: CreateLeadData) => {
 | Factory function | `{verb}{Entity}ActionFactory` |
 
 Common patterns:
-- `create-lead-action.ts` → `createLeadActionFactory`
-- `update-lead-action.ts` → `updateLeadActionFactory`
-- `delete-lead-action.ts` → `deleteLeadActionFactory`
-- `bulk-delete-leads-action.ts` → `bulkDeleteLeadsActionFactory`
-- `close-lead-action.ts` → `closeLeadActionFactory`
+- `create-post-action.ts` → `createPostActionFactory`
+- `update-post-action.ts` → `updatePostActionFactory`
+- `delete-post-action.ts` → `deletePostActionFactory`
+- `bulk-delete-posts-action.ts` → `bulkDeletePostsActionFactory`
+- `publish-post-action.ts` → `publishPostActionFactory`
 
 ---
 

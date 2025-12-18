@@ -9,17 +9,17 @@ project-root/
 │   │   ├── css/main.css             # Global styles (Tailwind)
 │   │   └── images/
 │   ├── components/                   # Vue components by type
-│   │   ├── Common/                  # Shared/generic (TeriLogo.vue)
-│   │   ├── Detail/                  # Detail views (LeadDetail.vue)
-│   │   ├── Form/                    # Form inputs (ContactEmailInput.vue)
-│   │   ├── Modals/                  # Modal dialogs (DeleteLeadModal.vue)
+│   │   ├── Common/                  # Shared/generic (Logo.vue)
+│   │   ├── Detail/                  # Detail views (PostDetail.vue)
+│   │   ├── Form/                    # Form inputs (AuthorEmailInput.vue)
+│   │   ├── Modals/                  # Modal dialogs (DeletePostModal.vue)
 │   │   ├── Nav/                     # Navigation (UserMenu.vue)
-│   │   ├── Slideovers/              # Slideout panels (CreateLeadSlideover.vue)
-│   │   ├── TabSections/             # Tab content (LeadInsightsTab.vue)
-│   │   └── Tables/                  # Table components (LeadsTable.vue)
+│   │   ├── Slideovers/              # Slideout panels (CreatePostSlideover.vue)
+│   │   ├── TabSections/             # Tab content (PostCommentsTab.vue)
+│   │   └── Tables/                  # Table components (PostsTable.vue)
 │   ├── composables/                 # Custom Vue composables
 │   │   ├── useUser.ts
-│   │   ├── useFeedbackCategories.ts
+│   │   ├── useCategories.ts
 │   │   └── useHandleActionError.ts
 │   ├── constants/                   # App-wide constants
 │   │   ├── channels.ts              # WebSocket channel names
@@ -27,27 +27,27 @@ project-root/
 │   │   ├── permissions.ts           # Permission strings
 │   │   └── symbols.ts               # Vue injection symbols
 │   ├── enums/                       # TypeScript enums with behavior
-│   │   ├── LeadStatus.ts
-│   │   ├── EvaluationStatus.ts
-│   │   └── SecureLinkStatus.ts
+│   │   ├── PostStatus.ts
+│   │   ├── CommentStatus.ts
+│   │   └── UserRole.ts
 │   ├── errors/                      # Custom error classes
 │   │   └── (optional app-specific)
 │   ├── features/                    # Domain-based feature modules
-│   │   ├── leads/
+│   │   ├── posts/
 │   │   │   ├── queries/
-│   │   │   │   ├── get-leads-query.ts
-│   │   │   │   └── get-lead-query.ts
+│   │   │   │   ├── get-posts-query.ts
+│   │   │   │   └── get-post-query.ts
 │   │   │   ├── mutations/
-│   │   │   │   ├── create-lead-mutation.ts
-│   │   │   │   ├── update-lead-mutation.ts
-│   │   │   │   └── delete-lead-mutation.ts
+│   │   │   │   ├── create-post-mutation.ts
+│   │   │   │   ├── update-post-mutation.ts
+│   │   │   │   └── delete-post-mutation.ts
 │   │   │   └── actions/
-│   │   │       ├── create-lead-action.ts
-│   │   │       ├── update-lead-action.ts
-│   │   │       └── delete-lead-action.ts
-│   │   ├── contacts/
-│   │   ├── secure-links/
-│   │   └── insights/
+│   │   │       ├── create-post-action.ts
+│   │   │       ├── update-post-action.ts
+│   │   │       └── delete-post-action.ts
+│   │   ├── authors/
+│   │   ├── comments/
+│   │   └── tags/
 │   ├── interceptors/                # HTTP interceptors
 │   │   ├── request/                 # Request interceptors
 │   │   │   └── append-source.ts
@@ -57,20 +57,20 @@ project-root/
 │   │   ├── auth.vue                 # Auth layout (login pages)
 │   │   └── default.vue              # Main app layout
 │   ├── models/                      # Domain models
-│   │   ├── Lead.ts
-│   │   ├── Contact.ts
-│   │   ├── SecureLink.ts
-│   │   ├── Insight.ts
+│   │   ├── Post.ts
+│   │   ├── Author.ts
+│   │   ├── Comment.ts
+│   │   ├── Tag.ts
 │   │   └── User.ts
 │   ├── pages/                       # File-based routing
 │   │   ├── index.vue                # Dashboard/redirect
 │   │   ├── profile.vue
 │   │   ├── auth/
 │   │   │   └── login.vue
-│   │   ├── leads/
+│   │   ├── posts/
 │   │   │   ├── index.vue            # List view
 │   │   │   └── [ulid].vue           # Detail view
-│   │   └── contacts/
+│   │   └── authors/
 │   │       ├── index.vue
 │   │       └── [ulid].vue
 │   ├── plugins/                     # Nuxt plugins
@@ -78,12 +78,12 @@ project-root/
 │   │   ├── init.ts                  # Initialize user/app state
 │   │   └── session.ts               # Session expiry handling
 │   ├── repositories/                # Data access layer
-│   │   ├── LeadRepository.ts
-│   │   ├── ContactRepository.ts
-│   │   └── SecureLinkRepository.ts
+│   │   ├── PostRepository.ts
+│   │   ├── AuthorRepository.ts
+│   │   └── CommentRepository.ts
 │   ├── tables/                      # Table column configurations
-│   │   ├── leads.ts
-│   │   └── contacts.ts
+│   │   ├── posts.ts
+│   │   └── authors.ts
 │   ├── types/                       # TypeScript definitions
 │   │   └── index.ts
 │   ├── utils/                       # Utility functions
@@ -108,13 +108,13 @@ Organized by **UI pattern**, not domain:
 | Folder | Purpose | Example |
 |--------|---------|---------|
 | `Common/` | Shared utilities | `Copyable.vue`, `LoadingLine.vue` |
-| `Detail/` | Entity detail views | `LeadDetail.vue`, `ContactDetail.vue` |
-| `Form/` | Reusable form inputs | `ContactEmailInput.vue` |
-| `Modals/` | Confirmation/action modals | `DeleteLeadModal.vue` |
+| `Detail/` | Entity detail views | `PostDetail.vue`, `AuthorDetail.vue` |
+| `Form/` | Reusable form inputs | `AuthorEmailInput.vue` |
+| `Modals/` | Confirmation/action modals | `DeletePostModal.vue` |
 | `Nav/` | Navigation elements | `UserMenu.vue`, `Sidebar.vue` |
-| `Slideovers/` | Slideout panels | `CreateLeadSlideover.vue` |
-| `TabSections/` | Tab content sections | `LeadInsightsTab.vue` |
-| `Tables/` | Data tables | `LeadsTable.vue` |
+| `Slideovers/` | Slideout panels | `CreatePostSlideover.vue` |
+| `TabSections/` | Tab content sections | `PostCommentsTab.vue` |
+| `Tables/` | Data tables | `PostsTable.vue` |
 
 ### `/app/features/`
 
@@ -135,16 +135,16 @@ Static values shared across the app:
 
 ```typescript
 // channels.ts - WebSocket channels
-export const Leads = 'leads'
-export const Lead = 'lead.{lead}'
+export const Posts = 'posts'
+export const Post = 'post.{post}'
 
 // events.ts - Event names
-export const LeadCreated = 'LeadCreated'
-export const LeadUpdated = 'LeadUpdated'
+export const PostCreated = 'PostCreated'
+export const PostUpdated = 'PostUpdated'
 
 // permissions.ts - Permission strings
-export const ListLeads = 'leads.list'
-export const CreateLead = 'leads.create'
+export const ListPosts = 'posts.list'
+export const CreatePost = 'posts.create'
 
 // symbols.ts - Vue injection keys
 export const SlideoverKey = Symbol('slideover')
@@ -178,8 +178,8 @@ export default defineNuxtConfig({
 ```typescript
 export default defineAppConfig({
   repositories: {
-    leads: LeadRepository,
-    contacts: ContactRepository,
+    posts: PostRepository,
+    authors: AuthorRepository,
   },
 
   interceptors: {
@@ -205,8 +205,8 @@ import type { Castable } from '#layers/base/app/types'
 import { BaseRepository } from '#layers/base/app/repositories/base-repository'
 
 // Import from app (use ~ alias)
-import Lead from '~/models/Lead'
-import { ListLeads } from '~/constants/permissions'
+import Post from '~/models/Post'
+import { ListPosts } from '~/constants/permissions'
 ```
 
 ## New Feature Checklist

@@ -16,16 +16,16 @@ Form handling with XForm component and validation error display.
 ```vue
 <XForm
   ref="formRef"
-  url="/lead-management/leads"
+  url="/api/posts"
   method="POST"
   :data="formData"
-  :waiting="waitingFor.leads.creating"
+  :waiting="waitingFor.posts.creating"
   @submit="onSubmit"
   @success="onSuccess"
   @error="onError"
 >
-  <UFormField label="Name" name="name" :error="form?.errors.first('name')">
-    <UInput v-model="formData.name" />
+  <UFormField label="Title" name="title" :error="form?.errors.first('title')">
+    <UInput v-model="formData.title" />
   </UFormField>
 
   <template #actions>
@@ -37,15 +37,15 @@ Form handling with XForm component and validation error display.
 ## Form Data Pattern
 
 ```typescript
-const formData = ref<CreateLeadData>({
-  email: '',
-  name: '',
-  demand: '',
-  testFlag: false,
+const formData = ref<CreatePostData>({
+  title: '',
+  content: '',
+  authorId: '',
+  isDraft: true,
 })
 
-const onSubmit = async (data: CreateLeadData) => {
-  await createLeadAction(data)
+const onSubmit = async (data: CreatePostData) => {
+  await createPostAction(data)
 }
 
 const onSuccess = () => {
@@ -57,11 +57,11 @@ const onSuccess = () => {
 
 ```typescript
 // Access errors
-form.errors.has('email')       // boolean
-form.errors.first('email')     // string | undefined
-form.errors.get('email')       // string[] | undefined
+form.errors.has('title')       // boolean
+form.errors.first('title')     // string | undefined
+form.errors.get('title')       // string[] | undefined
 form.errors.any()              // boolean
 
 // Display in template
-<UFormField label="Email" name="email" :error="form?.errors.first('email')">
+<UFormField label="Title" name="title" :error="form?.errors.first('title')">
 ```

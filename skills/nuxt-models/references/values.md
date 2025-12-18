@@ -73,16 +73,16 @@ export default class DateValue implements Castable {
 ```typescript
 import DateValue from '~/values/DateValue'
 
-class Lead extends Model {
+class Post extends Model {
   createdAt: DateValue
   updatedAt: DateValue
-  callScheduledAt?: DateValue
+  publishAt?: DateValue
 
   public override casts(): Record<string, Castable> {
     return {
       createdAt: DateValue,
       updatedAt: DateValue,
-      callScheduledAt: DateValue,
+      publishAt: DateValue,
     }
   }
 }
@@ -94,17 +94,17 @@ class Lead extends Model {
 <template>
   <div>
     <!-- Formatted date -->
-    <span>{{ lead.createdAt.format('DD MMM YYYY') }}</span>
+    <span>{{ post.createdAt.format('DD MMM YYYY') }}</span>
 
     <!-- Different formats -->
-    <span>{{ lead.createdAt.format('YYYY-MM-DD HH:mm') }}</span>
+    <span>{{ post.createdAt.format('YYYY-MM-DD HH:mm') }}</span>
 
     <!-- Relative time -->
-    <span>{{ lead.createdAt.fromNow() }}</span>
+    <span>{{ post.createdAt.fromNow() }}</span>
 
     <!-- Conditional display -->
-    <span v-if="lead.callScheduledAt?.isFuture()">
-      Scheduled for {{ lead.callScheduledAt.format() }}
+    <span v-if="post.publishAt?.isFuture()">
+      Scheduled for {{ post.publishAt.format() }}
     </span>
   </div>
 </template>

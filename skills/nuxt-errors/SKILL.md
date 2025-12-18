@@ -45,12 +45,12 @@ export default defineAppConfig({
 const { handleActionError } = useHandleActionError()
 
 try {
-  await createLead(data)
+  await createPost(data)
 } catch (error) {
   throw handleActionError(error, {
-    entity: 'lead',
+    entity: 'post',
     operation: 'create',
   })
 }
-// Shows: "Failed to create lead. [error details]"
+// Shows: "Failed to create post. [error details]"
 ```

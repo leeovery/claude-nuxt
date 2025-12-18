@@ -37,19 +37,19 @@ export default defineNuxtConfig({
 const { privateChannel, presenceChannel, leaveChannel } = useRealtime()
 
 // Subscribe to channel
-const channel = privateChannel('leads.{id}', leadId)
+const channel = privateChannel('posts.{id}', postId)
 
 // Listen for events
-channel.on('LeadUpdated', (event) => {
+channel.on('PostUpdated', (event) => {
   refresh()
 })
 
 // Multiple events
-channel.on(['LeadCreated', 'LeadUpdated', 'LeadDeleted'], refresh)
+channel.on(['PostCreated', 'PostUpdated', 'PostDeleted'], refresh)
 
 // Cleanup
 onUnmounted(() => {
-  leaveChannel('leads.{id}', leadId)
+  leaveChannel('posts.{id}', postId)
 })
 ```
 
@@ -57,10 +57,10 @@ onUnmounted(() => {
 
 ```typescript
 // app/constants/channels.ts
-export const Leads = 'leads'
-export const Lead = 'lead.{lead}'
+export const Posts = 'posts'
+export const Post = 'post.{post}'
 
 // app/constants/events.ts
-export const LeadCreated = 'LeadCreated'
-export const LeadUpdated = 'LeadUpdated'
+export const PostCreated = 'PostCreated'
+export const PostUpdated = 'PostUpdated'
 ```

@@ -8,13 +8,13 @@ Clear boundaries between layers:
 
 | Layer | Responsibility | Example |
 |-------|---------------|---------|
-| **Models** | Data structure, relations, casting | `Lead.ts` |
-| **Repositories** | API access, CRUD operations | `LeadRepository.ts` |
-| **Queries** | Reactive data fetching with filters | `get-leads-query.ts` |
-| **Mutations** | Pure data operations | `create-lead-mutation.ts` |
-| **Actions** | Business logic + UI feedback | `create-lead-action.ts` |
-| **Components** | Presentation, user interaction | `LeadsTable.vue` |
-| **Pages** | Route handling, layout composition | `leads/index.vue` |
+| **Models** | Data structure, relations, casting | `Post.ts` |
+| **Repositories** | API access, CRUD operations | `PostRepository.ts` |
+| **Queries** | Reactive data fetching with filters | `get-posts-query.ts` |
+| **Mutations** | Pure data operations | `create-post-mutation.ts` |
+| **Actions** | Business logic + UI feedback | `create-post-action.ts` |
+| **Components** | Presentation, user interaction | `PostsTable.vue` |
+| **Pages** | Route handling, layout composition | `posts/index.vue` |
 
 ### 2. Type Safety
 
@@ -22,16 +22,16 @@ Full TypeScript coverage:
 
 ```typescript
 // Explicit types on all public interfaces
-interface GetLeadsFilters extends Pick<Filters, 'page' | 'size' | 'search'> {
+interface GetPostsFilters extends Pick<Filters, 'page' | 'size' | 'search'> {
   status?: string
-  testFlag?: boolean
+  isDraft?: boolean
 }
 
 // Models define typed properties
-export default class Lead extends Model {
+export default class Post extends Model {
   ulid: string
-  status: LeadStatus        // Enum, auto-cast from API
-  contact: Contact          // Relation, auto-hydrated
+  status: PostStatus        // Enum, auto-cast from API
+  author: Author            // Relation, auto-hydrated
   createdAt: DateValue      // Value object, auto-cast
 }
 ```
@@ -59,13 +59,13 @@ Features grouped by domain, not technical concern:
 
 ```
 features/
-├── leads/
-│   ├── queries/get-leads-query.ts
-│   ├── mutations/create-lead-mutation.ts
-│   └── actions/create-lead-action.ts
-├── contacts/
+├── posts/
+│   ├── queries/get-posts-query.ts
+│   ├── mutations/create-post-mutation.ts
+│   └── actions/create-post-action.ts
+├── authors/
 │   └── ...
-└── secure-links/
+└── comments/
     └── ...
 ```
 
@@ -113,17 +113,17 @@ Data from API?
 ```typescript
 // BAD: Business logic in component
 const onSubmit = async () => {
-  const { data } = await useRepository('leads').create(formData)
-  flash.success('Lead created!')
-  if (data.hasSecureLinks()) {
+  const { data } = await useRepository('posts').create(formData)
+  flash.success('Post created!')
+  if (data.hasComments()) {
     // Show toast with link...
   }
 }
 
 // GOOD: Delegate to action
-const createLeadAction = createLeadActionFactory()
+const createPostAction = createPostActionFactory()
 const onSubmit = async () => {
-  await createLeadAction(formData)
+  await createPostAction(formData)
 }
 ```
 
@@ -132,13 +132,13 @@ const onSubmit = async () => {
 ```typescript
 // BAD: Component directly calls repository for mutations
 const deleteButton = async () => {
-  await useRepository('leads').delete(lead.ulid)
+  await useRepository('posts').delete(post.ulid)
 }
 
 // GOOD: Use action for mutations with feedback
-const deleteLeadAction = deleteLeadActionFactory()
+const deletePostAction = deletePostActionFactory()
 const deleteButton = async () => {
-  await deleteLeadAction(lead)
+  await deletePostAction(post)
 }
 ```
 
@@ -146,12 +146,12 @@ const deleteButton = async () => {
 
 ```typescript
 // BAD: Raw API data
-const { data } = await leadApi.get(id)
+const { data } = await postApi.get(id)
 console.log(data.status)  // string, no type safety
 
 // GOOD: Hydrated model
-const { data } = await leadApi.get(id)  // hydration enabled
-console.log(data.status.color())  // LeadStatus enum with methods
+const { data } = await postApi.get(id)  // hydration enabled
+console.log(data.status.color())  // PostStatus enum with methods
 ```
 
 ## Layer Dependencies
@@ -176,15 +176,15 @@ Each layer only imports from layers below it. Never import upward.
 
 | Type | Convention | Example |
 |------|------------|---------|
-| Models | PascalCase | `Lead.ts`, `SecureLink.ts` |
-| Repositories | PascalCase + "Repository" | `LeadRepository.ts` |
+| Models | PascalCase | `Post.ts`, `Comment.ts` |
+| Repositories | PascalCase + "Repository" | `PostRepository.ts` |
 | Composables | camelCase, "use" prefix | `useUser.ts` |
-| Queries | kebab-case + `-query` | `get-leads-query.ts` |
-| Mutations | kebab-case + `-mutation` | `create-lead-mutation.ts` |
-| Actions | kebab-case + `-action` | `create-lead-action.ts` |
-| Components | PascalCase | `CreateLeadSlideover.vue` |
-| Enums | PascalCase | `LeadStatus.ts` |
-| Pages | kebab-case | `leads/[ulid].vue` |
+| Queries | kebab-case + `-query` | `get-posts-query.ts` |
+| Mutations | kebab-case + `-mutation` | `create-post-mutation.ts` |
+| Actions | kebab-case + `-action` | `create-post-action.ts` |
+| Components | PascalCase | `CreatePostSlideover.vue` |
+| Enums | PascalCase | `PostStatus.ts` |
+| Pages | kebab-case | `posts/[ulid].vue` |
 
 ## Related Skills
 

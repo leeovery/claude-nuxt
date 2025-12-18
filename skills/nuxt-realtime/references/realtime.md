@@ -42,13 +42,13 @@ export default defineNuxtConfig({
 // app/constants/channels.ts
 
 // Collection channels
-export const Leads = 'leads'
-export const Contacts = 'contacts'
-export const Evaluations = 'evaluations'
+export const Posts = 'posts'
+export const Authors = 'authors'
+export const Comments = 'comments'
 
 // Resource channels (with parameter)
-export const Lead = 'lead.{lead}'
-export const Contact = 'contact.{contact}'
+export const Post = 'post.{post}'
+export const Author = 'author.{author}'
 export const Conversation = 'conversation.{conversation}'
 
 // User-specific channels
@@ -60,15 +60,15 @@ export const UserNotifications = 'user.{user}.notifications'
 ```typescript
 // app/constants/events.ts
 
-// Lead events
-export const LeadCreated = 'LeadCreated'
-export const LeadUpdated = 'LeadUpdated'
-export const LeadDeleted = 'LeadDeleted'
+// Post events
+export const PostCreated = 'PostCreated'
+export const PostUpdated = 'PostUpdated'
+export const PostDeleted = 'PostDeleted'
 
-// SecureLink events
-export const SecureLinkSent = 'SecureLinkSent'
-export const SecureLinkDelivered = 'SecureLinkDelivered'
-export const SecureLinkBounced = 'SecureLinkBounced'
+// Comment events
+export const CommentCreated = 'CommentCreated'
+export const CommentApproved = 'CommentApproved'
+export const CommentRejected = 'CommentRejected'
 
 // Conversation events
 export const MessageReceived = 'MessageReceived'
@@ -97,22 +97,22 @@ const {
 ### Basic Subscription
 
 ```typescript
-import { Leads, LeadCreated, LeadUpdated } from '~/constants/channels'
-import { LeadCreated, LeadUpdated } from '~/constants/events'
+import { Posts, PostCreated, PostUpdated } from '~/constants/channels'
+import { PostCreated, PostUpdated } from '~/constants/events'
 
 const { privateChannel } = useRealtime()
 
 // Subscribe to private channel
-const channel = privateChannel(Leads)
+const channel = privateChannel(Posts)
 
 // Listen for single event
-channel.on(LeadCreated, (event) => {
-  console.log('New lead:', event.lead)
+channel.on(PostCreated, (event) => {
+  console.log('New post:', event.post)
   refresh()
 })
 
 // Listen for multiple events
-channel.on([LeadCreated, LeadUpdated], (event) => {
+channel.on([PostCreated, PostUpdated], (event) => {
   refresh()
 })
 ```
@@ -120,13 +120,13 @@ channel.on([LeadCreated, LeadUpdated], (event) => {
 ### Channel with Parameter
 
 ```typescript
-import { Lead, LeadUpdated, LeadDeleted } from '~/constants'
+import { Post, PostUpdated, PostDeleted } from '~/constants'
 
 // Channel with dynamic ID
-const channel = privateChannel(Lead, lead.ulid)
-// Subscribes to: lead.{ulid}
+const channel = privateChannel(Post, post.ulid)
+// Subscribes to: post.{ulid}
 
-channel.on([LeadUpdated, LeadDeleted], refresh)
+channel.on([PostUpdated, PostDeleted], refresh)
 ```
 
 ### Cleanup on Unmount
@@ -135,12 +135,12 @@ channel.on([LeadUpdated, LeadDeleted], refresh)
 const { privateChannel, leaveChannel } = useRealtime()
 
 // Subscribe
-const channel = privateChannel(Lead, lead.ulid)
-channel.on(LeadUpdated, refresh)
+const channel = privateChannel(Post, post.ulid)
+channel.on(PostUpdated, refresh)
 
 // Cleanup
 onUnmounted(() => {
-  leaveChannel(Lead, lead.ulid)
+  leaveChannel(Post, post.ulid)
 })
 ```
 
@@ -149,39 +149,39 @@ onUnmounted(() => {
 ## Complete Page Example
 
 ```vue
-<!-- app/pages/leads/[ulid].vue -->
+<!-- app/pages/posts/[ulid].vue -->
 <script lang="ts" setup>
-import { Lead, LeadUpdated, LeadDeleted } from '~/constants/channels'
-import { LeadUpdated, LeadDeleted } from '~/constants/events'
+import { Post, PostUpdated, PostDeleted } from '~/constants/channels'
+import { PostUpdated, PostDeleted } from '~/constants/events'
 
 const route = useRoute()
 const router = useRouter()
 const ulid = computed(() => route.params.ulid as string)
 
 // Query
-const getLeadQuery = getLeadQueryFactory()
-const { data: lead, refresh } = getLeadQuery(ulid)
+const getPostQuery = getPostQueryFactory()
+const { data: post, refresh } = getPostQuery(ulid)
 
 // Real-time updates
 const { privateChannel, leaveChannel } = useRealtime()
 
-// Subscribe to lead channel
-const channel = privateChannel(Lead, ulid.value)
+// Subscribe to post channel
+const channel = privateChannel(Post, ulid.value)
 
 // Handle updates
-channel.on(LeadUpdated, () => {
+channel.on(PostUpdated, () => {
   refresh()
 })
 
 // Handle deletion
-channel.on(LeadDeleted, () => {
-  flash.info('This lead has been deleted')
-  router.push('/leads')
+channel.on(PostDeleted, () => {
+  flash.info('This post has been deleted')
+  router.push('/posts')
 })
 
 // Cleanup on unmount
 onUnmounted(() => {
-  leaveChannel(Lead, ulid.value)
+  leaveChannel(Post, ulid.value)
 })
 </script>
 ```
@@ -191,19 +191,19 @@ onUnmounted(() => {
 ## List Page with Real-time
 
 ```vue
-<!-- app/pages/leads/index.vue -->
+<!-- app/pages/posts/index.vue -->
 <script lang="ts" setup>
-import { Leads, LeadCreated, LeadUpdated, LeadDeleted } from '~/constants'
+import { Posts, PostCreated, PostUpdated, PostDeleted } from '~/constants'
 
 // Query
-const getLeadsQuery = getLeadsQueryFactory()
-const { data: leads, refresh } = getLeadsQuery(filters)
+const getPostsQuery = getPostsQueryFactory()
+const { data: posts, refresh } = getPostsQuery(filters)
 
 // Real-time updates for list
 const { privateChannel } = useRealtime()
 
-privateChannel(Leads).on(
-  [LeadCreated, LeadUpdated, LeadDeleted],
+privateChannel(Posts).on(
+  [PostCreated, PostUpdated, PostDeleted],
   refresh
 )
 </script>
@@ -214,31 +214,31 @@ privateChannel(Leads).on(
 ## Composable with Real-time
 
 ```typescript
-// app/composables/useRemainingJobCount.ts
-import { MatchJobs, MatchJobCreated, MatchJobComplete } from '~/constants'
+// app/composables/useRemainingTaskCount.ts
+import { Tasks, TaskCreated, TaskCompleted } from '~/constants'
 
-export default function useRemainingJobCount() {
-  const remainingJobCount = useState<number>('remaining-job-count', () => 0)
-  const jobApi = useRepository('jobs')
+export default function useRemainingTaskCount() {
+  const remainingTaskCount = useState<number>('remaining-task-count', () => 0)
+  const taskApi = useRepository('tasks')
   const { privateChannel } = useRealtime()
 
-  const fetchJobCount = async () => {
-    const { data } = await jobApi.list({ filter: { status: 'pending' } })
-    remainingJobCount.value = data.length
+  const fetchTaskCount = async () => {
+    const { data } = await taskApi.list({ filter: { status: 'pending' } })
+    remainingTaskCount.value = data.length
   }
 
   const init = () => {
     // Initial fetch
-    fetchJobCount()
+    fetchTaskCount()
 
     // Real-time updates
-    privateChannel(MatchJobs).on(
-      [MatchJobCreated, MatchJobComplete],
-      fetchJobCount
+    privateChannel(Tasks).on(
+      [TaskCreated, TaskCompleted],
+      fetchTaskCount
     )
   }
 
-  return { remainingJobCount, init }
+  return { remainingTaskCount, init }
 }
 ```
 
@@ -252,7 +252,7 @@ For channels that track online users:
 const { presenceChannel } = useRealtime()
 
 // Join presence channel
-const channel = presenceChannel('chat.{room}', roomId)
+const channel = presenceChannel('room.{room}', roomId)
 
 // Handle events
 channel.on('here', (users) => {
@@ -283,7 +283,7 @@ channel.on('MessageSent', (event) => {
 ```typescript
 const { privateChannel } = useRealtime()
 
-const channel = privateChannel(Leads)
+const channel = privateChannel(Posts)
 
 channel.error((error) => {
   console.error('Channel error:', error)
@@ -299,11 +299,11 @@ channel.error((error) => {
 
 ```typescript
 // Store channel reference for cleanup
-const channel = privateChannel(Lead, id)
-channel.on(LeadUpdated, refresh)
+const channel = privateChannel(Post, id)
+channel.on(PostUpdated, refresh)
 
 onUnmounted(() => {
-  leaveChannel(Lead, id)
+  leaveChannel(Post, id)
 })
 ```
 
@@ -311,10 +311,10 @@ onUnmounted(() => {
 
 ```typescript
 // DON'T: Magic strings
-privateChannel('leads').on('LeadCreated', ...)
+privateChannel('posts').on('PostCreated', ...)
 
 // DO: Use constants
-privateChannel(Leads).on(LeadCreated, ...)
+privateChannel(Posts).on(PostCreated, ...)
 ```
 
 ### 3. Debounce Refreshes
@@ -324,7 +324,7 @@ import { useDebounceFn } from '@vueuse/core'
 
 const debouncedRefresh = useDebounceFn(refresh, 300)
 
-channel.on([LeadCreated, LeadUpdated], debouncedRefresh)
+channel.on([PostCreated, PostUpdated], debouncedRefresh)
 ```
 
 ### 4. Check Connection

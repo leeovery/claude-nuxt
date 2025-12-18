@@ -15,19 +15,20 @@ Type-safe domain models with automatic hydration, relations, and property castin
 ## Basic Model
 
 ```typescript
-// app/models/Lead.ts
+// app/models/Post.ts
 import Model from '#layers/base/app/models/Model'
 import type { Castable } from '#layers/base/app/types'
-import LeadStatus from '~/enums/LeadStatus'
+import PostStatus from '~/enums/PostStatus'
 import DateValue from '~/values/DateValue'
-import Contact from '~/models/Contact'
+import Author from '~/models/Author'
 
-export default class Lead extends Model {
+export default class Post extends Model {
   ulid: string
-  status: LeadStatus
-  demand: string
-  testFlag: boolean
-  contact: Contact
+  title: string
+  content: string
+  status: PostStatus
+  isDraft: boolean
+  author: Author
   createdAt: DateValue
 
   public override primaryKey(): string {
@@ -36,19 +37,19 @@ export default class Lead extends Model {
 
   public override casts(): Record<string, Castable> {
     return {
-      status: LeadStatus,
+      status: PostStatus,
       createdAt: DateValue,
     }
   }
 
   public override relations(): Record<string, typeof Model> {
     return {
-      contact: Contact,
+      author: Author,
     }
   }
 
-  public isTest(): boolean {
-    return this.testFlag
+  public isPublished(): boolean {
+    return !this.isDraft
   }
 }
 ```
@@ -64,16 +65,16 @@ API Response → booting() → transform() → Property Assignment
 
 ```typescript
 // Hydrate from API response
-const lead = Lead.hydrate(apiResponse.data)
+const post = Post.hydrate(apiResponse.data)
 
 // Hydrate collection
-const leads = Lead.collect(apiResponse.data)
+const posts = Post.collect(apiResponse.data)
 
 // Access typed properties
-lead.status.color()           // Enum method
-lead.createdAt.format()       // Value object method
-lead.contact.name             // Relation property
+post.status.color()           // Enum method
+post.createdAt.format()       // Value object method
+post.author.name              // Relation property
 
 // Compare models
-lead.is(otherLead)            // Same primary key?
+post.is(otherPost)            // Same primary key?
 ```

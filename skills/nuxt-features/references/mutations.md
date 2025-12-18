@@ -25,81 +25,79 @@ export default function create{Entity}MutationFactory() {
 
 ## Complete Mutation Examples
 
-### Create Lead
+### Create Post
 
 ```typescript
-// app/features/leads/mutations/create-lead-mutation.ts
-import type Lead from '~/models/Lead'
+// app/features/posts/mutations/create-post-mutation.ts
+import type Post from '~/models/Post'
 
-export type CreateLeadData = {
-  name: string
-  email: string
-  demand: string
-  callScheduledAt: string
-  sendLoginLink: boolean
-  testFlag: boolean
+export type CreatePostData = {
+  title: string
+  content: string
+  authorId: string
+  publishedAt: string
+  isDraft: boolean
 }
 
-export default function createLeadMutationFactory() {
-  const leadApi = useRepository('leads')
+export default function createPostMutationFactory() {
+  const postApi = useRepository('posts')
   const { start, stop, waitingFor } = useWait()
 
-  return async (data: CreateLeadData): Promise<Lead> => {
+  return async (data: CreatePostData): Promise<Post> => {
     try {
-      start(waitingFor.leads.creating)
-      const { data: lead } = await leadApi.create(data)
-      return lead
+      start(waitingFor.posts.creating)
+      const { data: post } = await postApi.create(data)
+      return post
     } finally {
-      stop(waitingFor.leads.creating)
+      stop(waitingFor.posts.creating)
     }
   }
 }
 ```
 
-### Update Lead
+### Update Post
 
 ```typescript
-// app/features/leads/mutations/update-lead-mutation.ts
-import type Lead from '~/models/Lead'
+// app/features/posts/mutations/update-post-mutation.ts
+import type Post from '~/models/Post'
 
-export type UpdateLeadData = Partial<{
-  name: string
-  email: string
-  demand: string
-  callScheduledAt: string
-  testFlag: boolean
+export type UpdatePostData = Partial<{
+  title: string
+  content: string
+  publishedAt: string
+  isDraft: boolean
 }>
 
-export default function updateLeadMutationFactory() {
-  const leadApi = useRepository('leads')
+export default function updatePostMutationFactory() {
+  const postApi = useRepository('posts')
   const { start, stop, waitingFor } = useWait()
 
-  return async (ulid: string, data: UpdateLeadData): Promise<Lead> => {
+  return async (ulid: string, data: UpdatePostData): Promise<Post> => {
     try {
-      start(waitingFor.lead.updating(ulid))
-      const { data: lead } = await leadApi.update(ulid, data)
-      return lead
+      start(waitingFor.post.updating(ulid))
+      const { data: post } = await postApi.update(ulid, data)
+      return post
     } finally {
-      stop(waitingFor.lead.updating(ulid))
+      stop(waitingFor.post.updating(ulid))
     }
   }
 }
 ```
 
-### Delete Lead
+### Delete Post
 
 ```typescript
-// app/features/leads/mutations/delete-lead-mutation.ts
-export default function deleteLeadMutationFactory() {
-  const leadApi = useRepository('leads')
+// app/features/posts/mutations/delete-post-mutation.ts
+export default function deletePostMutationFactory() {
+  const postApi = useRepository('posts')
   const { start, stop, waitingFor } = useWait()
 
   return async (ulid: string): Promise<void> => {
     try {
-      start(waitingFor.lead.deleting(ulid))
-      await leadApi.delete(ulid)
+      start(waitingFor.post.deleting(ulid))
+      await postApi.delete(ulid)
     } finally {
-      stop(waitingFor.lead.deleting(ulid))
+      stop(waitingFor.post.deleting(ulid))
     }
   }
 }
@@ -115,30 +113,30 @@ Global loading state management:
 const { start, stop, is, waitingFor } = useWait()
 
 // Global operations (no ID)
-waitingFor.leads.creating       // Boolean ref: creating any lead
-waitingFor.leads.listing        // Boolean ref: listing leads
+waitingFor.posts.creating       // Boolean ref: creating any post
+waitingFor.posts.listing        // Boolean ref: listing posts
 
 // Per-item operations (with ID)
-waitingFor.lead.loading(ulid)   // Boolean ref: loading specific lead
-waitingFor.lead.updating(ulid)  // Boolean ref: updating specific lead
-waitingFor.lead.deleting(ulid)  // Boolean ref: deleting specific lead
+waitingFor.post.loading(ulid)   // Boolean ref: loading specific post
+waitingFor.post.updating(ulid)  // Boolean ref: updating specific post
+waitingFor.post.deleting(ulid)  // Boolean ref: deleting specific post
 ```
 
 ### Starting/Stopping
 
 ```typescript
 // Start waiting state
-start(waitingFor.leads.creating)
+start(waitingFor.posts.creating)
 
 // Stop waiting state
-stop(waitingFor.leads.creating)
+stop(waitingFor.posts.creating)
 
 // Always use try/finally to ensure stop is called
 try {
-  start(waitingFor.leads.creating)
+  start(waitingFor.posts.creating)
   // ... do work
 } finally {
-  stop(waitingFor.leads.creating)
+  stop(waitingFor.posts.creating)
 }
 ```
 
@@ -146,10 +144,10 @@ try {
 
 ```typescript
 // Check if operation in progress
-const isCreating = is(waitingFor.leads.creating)
+const isCreating = is(waitingFor.posts.creating)
 
 // Use in templates
-<UButton :loading="is(waitingFor.leads.creating)" />
+<UButton :loading="is(waitingFor.posts.creating)" />
 ```
 
 ---
@@ -157,20 +155,20 @@ const isCreating = is(waitingFor.leads.creating)
 ## Mutation with Custom Repository Method
 
 ```typescript
-// app/features/secure-links/mutations/create-secure-link-for-lead-mutation.ts
-import type SecureLink from '~/models/SecureLink'
+// app/features/comments/mutations/create-comment-for-post-mutation.ts
+import type Comment from '~/models/Comment'
 
-export default function createSecureLinkForLeadMutationFactory() {
-  const secureLinkApi = useRepository('secureLinks')
+export default function createCommentForPostMutationFactory() {
+  const commentApi = useRepository('comments')
   const { start, stop, waitingFor } = useWait()
 
-  return async (leadUlid: string): Promise<SecureLink> => {
+  return async (postUlid: string, content: string): Promise<Comment> => {
     try {
-      start(waitingFor.secureLinks.creating)
-      const { data: secureLink } = await secureLinkApi.createForLead(leadUlid)
-      return secureLink
+      start(waitingFor.comments.creating)
+      const { data: comment } = await commentApi.createForPost(postUlid, { content })
+      return comment
     } finally {
-      stop(waitingFor.secureLinks.creating)
+      stop(waitingFor.comments.creating)
     }
   }
 }
@@ -181,31 +179,31 @@ export default function createSecureLinkForLeadMutationFactory() {
 ## Mutation with Multiple API Calls
 
 ```typescript
-// app/features/leads/mutations/create-lead-with-link-mutation.ts
-import type Lead from '~/models/Lead'
+// app/features/posts/mutations/create-post-with-image-mutation.ts
+import type Post from '~/models/Post'
 
-export default function createLeadWithLinkMutationFactory() {
-  const leadApi = useRepository('leads')
-  const secureLinkApi = useRepository('secureLinks')
+export default function createPostWithImageMutationFactory() {
+  const postApi = useRepository('posts')
+  const imageApi = useRepository('images')
   const { start, stop, waitingFor } = useWait()
 
-  return async (data: CreateLeadData): Promise<Lead> => {
+  return async (data: CreatePostData, imageFile?: File): Promise<Post> => {
     try {
-      start(waitingFor.leads.creating)
+      start(waitingFor.posts.creating)
 
-      // Create lead
-      const { data: lead } = await leadApi.create(data)
+      // Create post
+      const { data: post } = await postApi.create(data)
 
-      // Create secure link if requested
-      if (data.sendLoginLink) {
-        await secureLinkApi.createForLead(lead.ulid)
+      // Upload image if provided
+      if (imageFile) {
+        await imageApi.uploadForPost(post.ulid, imageFile)
       }
 
       // Refetch with relations
-      const { data: fullLead } = await leadApi.get(lead.ulid)
-      return fullLead
+      const { data: fullPost } = await postApi.get(post.ulid)
+      return fullPost
     } finally {
-      stop(waitingFor.leads.creating)
+      stop(waitingFor.posts.creating)
     }
   }
 }
@@ -233,15 +231,15 @@ Export types for use in actions and components:
 
 ```typescript
 // Export data type for action/component use
-export type CreateLeadData = {
-  name: string
-  email: string
-  demand: string
+export type CreatePostData = {
+  title: string
+  content: string
+  authorId: string
   // ...
 }
 
 // Partial type for updates
-export type UpdateLeadData = Partial<CreateLeadData>
+export type UpdatePostData = Partial<CreatePostData>
 ```
 
 ---
@@ -252,27 +250,27 @@ Mutations **throw errors** - don't catch and handle:
 
 ```typescript
 // CORRECT: Let error propagate to action
-return async (data: CreateLeadData): Promise<Lead> => {
+return async (data: CreatePostData): Promise<Post> => {
   try {
-    start(waitingFor.leads.creating)
-    const { data: lead } = await leadApi.create(data)
-    return lead
+    start(waitingFor.posts.creating)
+    const { data: post } = await postApi.create(data)
+    return post
   } finally {
-    stop(waitingFor.leads.creating)  // Always stop wait state
+    stop(waitingFor.posts.creating)  // Always stop wait state
   }
 }
 
 // WRONG: Catching and logging in mutation
-return async (data: CreateLeadData): Promise<Lead | null> => {
+return async (data: CreatePostData): Promise<Post | null> => {
   try {
-    start(waitingFor.leads.creating)
-    const { data: lead } = await leadApi.create(data)
-    return lead
+    start(waitingFor.posts.creating)
+    const { data: post } = await postApi.create(data)
+    return post
   } catch (error) {
     console.error('Failed:', error)  // Don't do this
     return null
   } finally {
-    stop(waitingFor.leads.creating)
+    stop(waitingFor.posts.creating)
   }
 }
 ```
@@ -287,7 +285,7 @@ return async (data: CreateLeadData): Promise<Lead | null> => {
 | Factory function | `{verb}{Entity}MutationFactory` |
 | Data type | `{Verb}{Entity}Data` |
 
-Common verbs: `create`, `update`, `delete`, `send`, `resend`, `archive`
+Common verbs: `create`, `update`, `delete`, `publish`, `archive`, `restore`
 
 ---
 

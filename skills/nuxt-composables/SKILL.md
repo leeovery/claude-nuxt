@@ -30,18 +30,18 @@ Reusable stateful logic via Vue Composition API.
 ```typescript
 // Loading states
 const { start, stop, is, waitingFor } = useWait()
-start(waitingFor.leads.creating)
+start(waitingFor.posts.creating)
 // ... work
-stop(waitingFor.leads.creating)
+stop(waitingFor.posts.creating)
 
 // Flash messages
 const flash = useFlash()
-flash.success('Lead created!')
-flash.error('Failed to create lead')
+flash.success('Post created!')
+flash.error('Failed to create post')
 
 // Permissions
 const { can, cannot } = usePermissions()
-if (can('leads.create')) { /* ... */ }
+if (can('posts.create')) { /* ... */ }
 
 // Reactive filters
 const { filters, hasFilters, resetFilters } = useReactiveFilters({

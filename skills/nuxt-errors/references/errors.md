@@ -188,19 +188,19 @@ export function useHandleActionError() {
 ### Usage in Actions
 
 ```typescript
-export default function createLeadActionFactory() {
-  const createLead = createLeadMutationFactory()
+export default function createPostActionFactory() {
+  const createPost = createPostMutationFactory()
   const flash = useFlash()
   const { handleActionError } = useHandleActionError()
 
-  return async (data: CreateLeadData): Promise<Lead> => {
+  return async (data: CreatePostData): Promise<Post> => {
     try {
-      const lead = await createLead(data)
-      flash.success('Lead created successfully.')
-      return lead
+      const post = await createPost(data)
+      flash.success('Post created successfully.')
+      return post
     } catch (error) {
       throw handleActionError(error, {
-        entity: 'lead',
+        entity: 'post',
         operation: 'create',
       })
     }
@@ -277,7 +277,7 @@ const handleError = () => clearError({ redirect: '/' })
 if (!data.value) {
   throw createError({
     statusCode: 404,
-    message: 'Lead not found',
+    message: 'Post not found',
   })
 }
 ```
@@ -301,9 +301,9 @@ export class BusinessError extends Error {
 
 // Usage
 throw new BusinessError(
-  'Lead cannot be deleted',
-  'LEAD_HAS_ACTIVE_LINKS',
-  { linkCount: 3 }
+  'Post cannot be deleted',
+  'POST_HAS_ACTIVE_COMMENTS',
+  { commentCount: 3 }
 )
 ```
 
@@ -373,7 +373,7 @@ async (data) => {
 flash.error(error.message)
 
 // DO
-flash.error('Failed to create lead.', error.message)
+flash.error('Failed to create post.', error.message)
 ```
 
 ---
