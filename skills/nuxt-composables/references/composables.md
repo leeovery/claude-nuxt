@@ -1,247 +1,27 @@
-# Composable Patterns
-
-## Core Composables Reference
-
-### useWait
-
-Global loading state management:
-
-```typescript
-const { start, stop, is, waitingFor } = useWait()
-
-// Global operations (no ID)
-waitingFor.posts.creating       // Creating any post
-waitingFor.posts.listing        // Listing posts
-
-// Per-item operations (with ID)
-waitingFor.post.loading(ulid)   // Loading specific post
-waitingFor.post.updating(ulid)  // Updating specific post
-waitingFor.post.deleting(ulid)  // Deleting specific post
-
-// Start/stop
-start(waitingFor.posts.creating)
-// ... do work
-stop(waitingFor.posts.creating)
-
-// Check state
-const isCreating = is(waitingFor.posts.creating)
-
-// In templates
-<UButton :loading="is(waitingFor.posts.creating)">Create</UButton>
-```
-
-### useFlash
-
-Toast notification system:
-
-```typescript
-const flash = useFlash()
-
-// Basic messages
-flash.success('Post created successfully.')
-flash.error('Failed to create post.')
-flash.warning('This action cannot be undone.')
-flash.info('New updates available.')
-
-// With description
-flash.success('Post created', 'It will be published shortly.')
-flash.error('Failed to create post', 'Please check your input.')
-
-// Duration (ms)
-flash.success('Quick message', undefined, { duration: 2000 })
-```
-
-### usePermissions
-
-Permission checking:
-
-```typescript
-const { can, cannot, before, registerPermissions } = usePermissions()
-
-// Check single permission
-if (can('posts.create')) { /* ... */ }
-if (cannot('posts.delete')) { /* ... */ }
-
-// Check multiple (any of)
-if (can(['posts.create', 'posts.update'])) { /* ... */ }
-
-// Register permissions (usually in init plugin)
-registerPermissions(['posts.list', 'posts.create', 'posts.update'])
-
-// Admin bypass
-before(() => {
-  if (user.isAdmin) return true
-  return null  // Check normally
-})
-```
-
-### useReactiveFilters
-
-URL-synced reactive filters:
-
-```typescript
-const { filters, hasFilters, resetFilters, resetFilter } = useReactiveFilters<GetPostsFilters>({
-  // Default values
-  status: undefined,
-  isDraft: undefined,
-  page: 1,
-  size: 25,
-}, {
-  syncWithUrl: true,              // Sync to URL query params
-  neverResetOn: ['page'],         // Don't reset page on filter changes
-  debounceUrlUpdate: 300,         // Debounce URL updates
-  provideAs: 'PostFilters',       // Provide to children
-})
-
-// Filters are reactive
-filters.status = 'published'      // Triggers query refetch
-filters.page = 2                  // Triggers query refetch
-
-// Check if any filters active
-if (hasFilters.value) {
-  // Show "Clear filters" button
-}
-
-// Reset single filter
-resetFilter('status')
-
-// Reset all filters
-resetFilters()
-```
-
-### useSlideover
-
-Slideover panel control:
-
-```typescript
-const { open, close, isOpen, props } = useSlideover('create-post')
-
-// Open slideover
-open()
-
-// Open with props
-open({ author: selectedAuthor })
-
-// Close
-close()
-
-// Check state
-if (isOpen.value) { /* ... */ }
-
-// Access props in slideover component
-const slideover = useSlideover('create-post')
-const author = computed(() => slideover.props.value?.author)
-```
-
-### useModal
-
-Modal dialog control:
-
-```typescript
-const { open, close, isOpen, props } = useModal('delete-post')
-
-// Open modal
-open()
-
-// Open with props
-open({ post: selectedPost })
-
-// Close
-close()
-```
-
-### useConfirmationToast
-
-Confirmation with confirm/cancel actions:
-
-```typescript
-const { trigger } = useConfirmationToast()
-
-trigger({
-  title: 'Delete Post?',
-  description: 'This action cannot be undone.',
-  confirmLabel: 'Delete',
-  cancelLabel: 'Cancel',
-  onConfirm: async () => {
-    await deletePostAction(post)
-  },
-  onCancel: () => {
-    // Optional cancel handler
-  },
-})
-```
-
-### useRealtime
-
-WebSocket channel subscriptions:
-
-```typescript
-const { privateChannel, presenceChannel, leaveChannel } = useRealtime()
-
-// Subscribe to private channel
-const channel = privateChannel('posts.{id}', postId)
-
-// Listen for events
-channel.on('PostUpdated', (event) => {
-  refresh()
-})
-
-// Multiple events
-channel.on(['PostUpdated', 'PostDeleted'], (event) => {
-  refresh()
-})
-
-// Cleanup
-onUnmounted(() => {
-  leaveChannel('posts.{id}', postId)
-})
-```
-
-### useAppHeader
-
-App header state:
-
-```typescript
-const { setAppHeader, appHeader } = useAppHeader()
-
-setAppHeader({
-  title: 'Posts',
-  subtitle: 'Manage your posts',
-  icon: 'lucide:file-text',
-})
-
-// Access in layout
-<h1>{{ appHeader.title }}</h1>
-```
-
-### useBreadcrumbs
-
-Breadcrumb navigation:
-
-```typescript
-const { setBreadcrumbs, breadcrumbs } = useBreadcrumbs()
-
-setBreadcrumbs([
-  { label: 'Content' },
-  { label: 'Posts', to: '/posts' },
-  { label: 'My Post' },
-])
-
-// Access in layout
-<UBreadcrumb :items="breadcrumbs" />
-```
+# Creating Composables
+
+## When to Create a Composable
+
+Create a composable when you need:
+- **Shared state** across multiple components
+- **Reusable logic** with reactive state
+- **Encapsulated complexity** for a specific feature
+- **Cleanup handling** for subscriptions or timers
+
+Don't create a composable for:
+- Simple one-off logic (use inline code)
+- Pure utility functions without state (use `utils/`)
+- Data fetching (use queries in `features/`)
 
 ---
 
-## Custom Composable Patterns
+## Singleton Pattern (Shared State)
 
-### Singleton State Pattern
-
-State persists across components:
+State persists across all components. Use for app-wide state.
 
 ```typescript
 // app/composables/useUser.ts
-let user = ref<User>()  // Singleton - defined outside function
+let user = ref<User>()  // Outside function = singleton
 
 export default function useUser() {
   const getUser = () => user
@@ -258,146 +38,346 @@ export default function useUser() {
 }
 ```
 
-### Factory Pattern
-
-Create new instance each call:
+### Usage
 
 ```typescript
-// app/composables/useForm.ts
-export default function useForm<T>(url: string, method: string, initialData: T) {
-  const data = ref(initialData)
-  const processing = ref(false)
-  const errors = ref<Record<string, string[]>>({})
+// Component A
+const { setUser } = useUser()
+setUser(userData)
 
-  const submit = async () => {
-    processing.value = true
-    try {
-      // ... submit logic
-    } finally {
-      processing.value = false
-    }
+// Component B - sees the same user
+const { user } = useUser()
+console.log(user.value?.name)  // Same instance
+```
+
+---
+
+## Factory Pattern (Fresh State)
+
+New state per call. Use for component-local state with reusable logic.
+
+```typescript
+// app/composables/useToggle.ts
+export default function useToggle(initial = false) {
+  const value = ref(initial)  // Inside function = fresh per call
+
+  const toggle = () => {
+    value.value = !value.value
   }
 
-  return { data, processing, errors, submit }
+  const setTrue = () => { value.value = true }
+  const setFalse = () => { value.value = false }
+
+  return { value, toggle, setTrue, setFalse }
 }
 ```
 
-### Domain-Specific Composable
+### Usage
 
 ```typescript
-// app/composables/useCategories.ts
-export function useCategories() {
-  const builtTree = useState('categories')
+// Component A
+const sidebar = useToggle(true)
 
-  const getCategoryTree = (
-    categories: MaybeRef<Category[] | undefined>,
-    type?: string
-  ): ComputedRef<Category | CategoryTree | undefined> => {
-    return computed(() => {
-      // Build hierarchical tree from flat array
-      const cats = toValue(categories)
-      if (!cats) return undefined
-
-      // ... tree building logic
-
-      return type ? tree[type] : tree
-    })
-  }
-
-  return { getCategoryTree, builtTree }
-}
+// Component B - separate instance
+const modal = useToggle(false)
 ```
 
-### Error Handler Composable
+---
+
+## useState Pattern (SSR-Safe Singleton)
+
+For state that needs SSR hydration:
 
 ```typescript
-// app/composables/useHandleActionError.ts
-export function useHandleActionError() {
-  const flash = useFlash()
+// app/composables/useSettings.ts
+export default function useSettings() {
+  const settings = useState<Settings>('app-settings', () => ({
+    theme: 'light',
+    language: 'en',
+  }))
 
-  const handleActionError = (
-    error: unknown,
-    context: { entity: string; operation: string }
-  ) => {
-    const message = `Failed to ${context.operation} ${context.entity}.`
-
-    if (error instanceof ValidationError) {
-      flash.error(message, error.message)
-    } else {
-      flash.error(message, 'An unexpected error occurred.')
-    }
-
-    return error
+  const setTheme = (theme: string) => {
+    settings.value.theme = theme
   }
 
-  return { handleActionError }
-}
-```
-
-### Task Count Composable
-
-```typescript
-// app/composables/useRemainingTaskCount.ts
-export default function useRemainingTaskCount() {
-  const remainingTaskCount = useState<number>('remaining-task-count', () => 0)
-  const taskApi = useRepository('tasks')
-  const { privateChannel } = useRealtime()
-
-  const fetchTaskCount = async () => {
-    const { data } = await taskApi.list({ filter: { status: 'pending' } })
-    remainingTaskCount.value = data.length
-  }
-
-  const init = () => {
-    fetchTaskCount()
-
-    privateChannel(Tasks).on(
-      [TaskCreated, TaskCompleted],
-      fetchTaskCount
-    )
-  }
-
-  return { remainingTaskCount, init }
+  return { settings, setTheme }
 }
 ```
 
 ---
 
-## Composable Organization
+## Composable with Dependencies
+
+Composables that use other composables or repositories:
+
+```typescript
+// app/composables/useCategories.ts
+export function useCategories() {
+  const categoryApi = useRepository('categories')
+  const categories = ref<Category[]>([])
+  const loading = ref(false)
+
+  const fetchCategories = async () => {
+    loading.value = true
+    try {
+      const { data } = await categoryApi.list()
+      categories.value = data
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const getCategoryTree = computed(() => {
+    // Build hierarchical tree from flat array
+    return buildTree(categories.value)
+  })
+
+  return { categories, loading, fetchCategories, getCategoryTree }
+}
+```
+
+---
+
+## Composable with Cleanup
+
+For subscriptions, timers, or event listeners:
+
+```typescript
+// app/composables/usePolling.ts
+export default function usePolling(callback: () => void, interval = 5000) {
+  const isPolling = ref(false)
+  let timer: NodeJS.Timeout | null = null
+
+  const start = () => {
+    if (isPolling.value) return
+    isPolling.value = true
+    timer = setInterval(callback, interval)
+  }
+
+  const stop = () => {
+    if (timer) {
+      clearInterval(timer)
+      timer = null
+    }
+    isPolling.value = false
+  }
+
+  // Auto-cleanup on unmount
+  onUnmounted(stop)
+
+  return { isPolling, start, stop }
+}
+```
+
+---
+
+## Composable with Real-time
+
+Encapsulating WebSocket subscriptions:
+
+```typescript
+// app/composables/useTaskNotifications.ts
+import { Tasks, TaskCreated, TaskCompleted } from '~/constants'
+
+export default function useTaskNotifications() {
+  const pendingCount = ref(0)
+  const taskApi = useRepository('tasks')
+  const { privateChannel, leaveChannel } = useRealtime()
+
+  const fetchCount = async () => {
+    const { data } = await taskApi.list({ filter: { status: 'pending' } })
+    pendingCount.value = data.length
+  }
+
+  const init = () => {
+    fetchCount()
+
+    privateChannel(Tasks).on(
+      [TaskCreated, TaskCompleted],
+      fetchCount
+    )
+  }
+
+  onUnmounted(() => {
+    leaveChannel(Tasks)
+  })
+
+  return { pendingCount, init }
+}
+```
+
+---
+
+## Composable with Provide/Inject
+
+For scoped state within component trees:
+
+```typescript
+// app/composables/useFormContext.ts
+import type { InjectionKey } from 'vue'
+
+interface FormContext {
+  errors: Ref<Record<string, string[]>>
+  setError: (field: string, message: string) => void
+  clearError: (field: string) => void
+}
+
+export const FormContextKey: InjectionKey<FormContext> = Symbol('form-context')
+
+export function useProvideFormContext() {
+  const errors = ref<Record<string, string[]>>({})
+
+  const setError = (field: string, message: string) => {
+    errors.value[field] = [message]
+  }
+
+  const clearError = (field: string) => {
+    delete errors.value[field]
+  }
+
+  const context: FormContext = { errors, setError, clearError }
+  provide(FormContextKey, context)
+
+  return context
+}
+
+export function useFormContext() {
+  const context = inject(FormContextKey)
+  if (!context) {
+    throw new Error('useFormContext must be used within a form provider')
+  }
+  return context
+}
+```
+
+---
+
+## Return Value Patterns
+
+### Always Return Objects
+
+```typescript
+// GOOD: Object - extensible, clear names
+return { user, setUser, clearUser }
+
+// BAD: Array - position-dependent, unclear
+return [user, setUser, clearUser]
+```
+
+### Consistent Naming
+
+```typescript
+return {
+  // State - noun
+  user,
+  isLoading,
+  error,
+
+  // Actions - verb
+  fetchUser,
+  updateUser,
+  clearError,
+
+  // Computed - descriptive
+  fullName,
+  isAdmin,
+}
+```
+
+---
+
+## File Structure
 
 ```
 app/
 └── composables/
-    ├── useUser.ts                 # User state management
-    ├── useCategories.ts           # Domain-specific logic
-    ├── useHandleActionError.ts    # Error handling utility
-    └── useRemainingTaskCount.ts   # Real-time task tracking
+    ├── useUser.ts           # User state (singleton)
+    ├── useCategories.ts     # Category data + tree
+    ├── useToggle.ts         # Generic toggle (factory)
+    ├── usePolling.ts        # Polling utility
+    └── useFormContext.ts    # Form provide/inject
 ```
 
 ---
 
 ## Naming Conventions
 
-| Convention | Example |
-|------------|---------|
-| File name | camelCase with "use" prefix: `useUser.ts` |
-| Export | Default function: `export default function useUser()` |
-| Return | Object with reactive refs and methods |
+| Element | Convention | Example |
+|---------|------------|---------|
+| File | camelCase with `use` prefix | `useUser.ts` |
+| Function | `export default function use{Name}()` | `useUser()` |
+| State refs | Descriptive nouns | `user`, `categories` |
+| Boolean refs | `is` prefix | `isLoading`, `isOpen` |
+| Actions | Verbs | `fetchUser`, `setTheme` |
+| Computed | Descriptive | `fullName`, `categoryTree` |
 
 ---
 
 ## Best Practices
 
-1. **Single Responsibility** - Each composable does one thing
-2. **Return Object** - Always return object, not array (more extensible)
-3. **Reactive by Default** - Use `ref` or `computed` for state
-4. **Cleanup** - Use `onUnmounted` for subscriptions
-5. **Type Everything** - Full TypeScript coverage
+### 1. Single Responsibility
+
+```typescript
+// GOOD: One concern
+export default function useUser() { /* user state only */ }
+export default function useAuth() { /* auth flow only */ }
+
+// BAD: Multiple concerns
+export default function useUserAndAuth() { /* mixed */ }
+```
+
+### 2. Explicit Dependencies
+
+```typescript
+// GOOD: Dependencies as parameters
+export default function useSearch(repository: string) {
+  const api = useRepository(repository)
+  // ...
+}
+
+// Less flexible: Hardcoded dependency
+export default function useSearch() {
+  const api = useRepository('posts')  // Always posts
+  // ...
+}
+```
+
+### 3. Type Everything
+
+```typescript
+interface UseUserReturn {
+  user: Ref<User | undefined>
+  setUser: (data: BaseEntity) => void
+  clearUser: () => void
+}
+
+export default function useUser(): UseUserReturn {
+  // ...
+}
+```
+
+### 4. Handle Cleanup
+
+```typescript
+export default function useSubscription() {
+  const unsubscribe = ref<(() => void) | null>(null)
+
+  const subscribe = () => {
+    unsubscribe.value = someService.subscribe()
+  }
+
+  onUnmounted(() => {
+    unsubscribe.value?.()
+  })
+
+  return { subscribe }
+}
+```
 
 ---
 
 ## Related Skills
 
-- **[nuxt-layers](../../nuxt-layers/SKILL.md)** - Layer composables
-- **[nuxt-features](../../nuxt-features/SKILL.md)** - Using composables in features
-- **[nuxt-realtime](../../nuxt-realtime/SKILL.md)** - Real-time composables
+- **[nuxt-features](../../nuxt-features/SKILL.md)** - Queries/actions (prefer over data-fetching composables)
+- **[nuxt-realtime](../../nuxt-realtime/SKILL.md)** - Real-time subscriptions
+- **[nuxt-components](../../nuxt-components/SKILL.md)** - Using composables in components

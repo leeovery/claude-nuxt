@@ -1,60 +1,23 @@
 ---
 name: nuxt-composables
-description: Vue composables for reusable stateful logic. Use when understanding core composables (useWait, useFlash, useReactiveFilters, usePermissions), creating custom composables, or managing shared state.
+description: Creating custom Vue composables with proper patterns. Use when building reusable stateful logic, shared state management, or encapsulating feature-specific behavior.
 ---
 
 # Nuxt Composables
 
-Reusable stateful logic via Vue Composition API.
+Creating reusable stateful logic via Vue Composition API.
 
 ## Core Concepts
 
-**[composables.md](references/composables.md)** - Core composables, patterns, custom composables
+**[composables.md](references/composables.md)** - Patterns, naming, state management, best practices
 
-## Core Composables (from layers)
+## Singleton Pattern (Shared State)
 
-| Composable | Purpose |
-|------------|---------|
-| `useRepository(name)` | Get typed repository instance |
-| `useWait()` | Global loading state management |
-| `useFlash()` | Toast notification system |
-| `usePermissions()` | Permission checking |
-| `useReactiveFilters(defaults)` | URL-synced reactive filters |
-| `useRealtime()` | WebSocket subscriptions |
-| `useSlideover(name)` | Slideover control |
-| `useModal(name)` | Modal control |
-| `useConfirmationToast()` | Confirm/cancel toasts |
-
-## Quick Examples
-
-```typescript
-// Loading states
-const { start, stop, is, waitingFor } = useWait()
-start(waitingFor.posts.creating)
-// ... work
-stop(waitingFor.posts.creating)
-
-// Flash messages
-const flash = useFlash()
-flash.success('Post created!')
-flash.error('Failed to create post')
-
-// Permissions
-const { can, cannot } = usePermissions()
-if (can('posts.create')) { /* ... */ }
-
-// Reactive filters
-const { filters, hasFilters, resetFilters } = useReactiveFilters({
-  status: undefined,
-  page: 1,
-}, { syncWithUrl: true })
-```
-
-## Custom Composable Pattern
+State defined outside function persists across all callers:
 
 ```typescript
 // app/composables/useUser.ts
-let user = ref<User>()
+let user = ref<User>()  // Singleton - shared across app
 
 export default function useUser() {
   const setUser = (data: BaseEntity) => {
@@ -65,3 +28,27 @@ export default function useUser() {
   return { user, setUser, clearUser }
 }
 ```
+
+## Factory Pattern (Fresh State)
+
+State defined inside function - new instance per call:
+
+```typescript
+// app/composables/useCounter.ts
+export default function useCounter(initial = 0) {
+  const count = ref(initial)  // Fresh per call
+  const increment = () => count.value++
+  const decrement = () => count.value--
+
+  return { count, increment, decrement }
+}
+```
+
+## Naming & File Conventions
+
+| Convention | Example |
+|------------|---------|
+| File name | `useUser.ts`, `useCategories.ts` |
+| Function | `export default function useUser()` |
+| Return | Always object `{ state, methods }` |
+| Refs | Reactive: `user`, not `userRef` |
