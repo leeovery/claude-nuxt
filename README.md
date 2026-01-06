@@ -14,6 +14,13 @@
 
 ---
 
+## Versions
+
+| Version | Package Manager | Status | Branch |
+|---------|----------------|--------|--------|
+| 2.x | npm | **Active** | `main` |
+| 1.x | Composer | Deprecated | [`v1`](https://github.com/leeovery/claude-nuxt/tree/v1) |
+
 ## About
 
 This is a curated collection of Nuxt 4 + Vue 3 development patterns refined across multiple production applications in the Fabric ecosystem.
@@ -25,30 +32,20 @@ This is a curated collection of Nuxt 4 + Vue 3 development patterns refined acro
 ## Installation
 
 ```bash
-composer require --dev leeovery/claude-nuxt
+npm install @leeovery/claude-nuxt
 ```
 
 That's it. The [Claude Manager](https://github.com/leeovery/claude-manager) handles everything else automatically.
 
-### Installation Modes
-
-On first install, you'll be prompted to choose an installation mode. This choice applies to all plugins managed by Claude Manager:
-
-| Mode | Description |
-|------|-------------|
-| **Symlink** (default) | Assets stay in vendor/ with symlinks to `.claude/`. Gitignore is managed automatically. |
-| **Copy** | Assets are copied to `.claude/` and become part of your repository. Ideal for Claude Code on the web where skills need to be available before `composer install` runs. |
-
-See the [Claude Manager README](https://github.com/leeovery/claude-manager#readme) for full details on switching modes and CLI commands.
-
 ## How It Works
 
-This package depends on [`leeovery/claude-manager`](https://github.com/leeovery/claude-manager), which:
+This package depends on [`@leeovery/claude-manager`](https://github.com/leeovery/claude-manager), which:
 
-1. **Symlinks skills** into your project's `.claude/skills/` directory
-2. **Symlinks commands** into your project's `.claude/commands/` directory
-3. **Manages your `.gitignore`** with a deterministic list of linked skills and commands
-4. **Handles installation/removal** automatically via Composer hooks
+1. **Copies skills** into your project's `.claude/skills/` directory
+2. **Copies commands** into your project's `.claude/commands/` directory
+3. **Copies agents** into your project's `.claude/agents/` directory
+4. **Tracks installed plugins** via a manifest file
+5. **Handles installation/removal** automatically via npm hooks
 
 You don't need to configure anything—just install and start coding.
 
@@ -104,8 +101,8 @@ Slash commands for common Nuxt development tasks.
 
 ## Requirements
 
-- PHP ^8.2
-- [leeovery/claude-manager](https://github.com/leeovery/claude-manager) ^1.0 (installed automatically)
+- Node.js 18+
+- [@leeovery/claude-manager](https://github.com/leeovery/claude-manager) ^2.0.0 (installed automatically)
 
 ## Contributing
 
@@ -120,9 +117,9 @@ Please open an issue first to discuss significant changes. These are opinionated
 
 ## Related Packages
 
-- [**claude-manager**](https://github.com/leeovery/claude-manager) — The plugin manager that powers skill installation
-- [**claude-laravel**](https://github.com/leeovery/claude-laravel) — Laravel development skills for Claude Code
-- [**claude-technical-workflows**](https://github.com/leeovery/claude-technical-workflows) — Technical workflow skills for Claude Code
+- [**@leeovery/claude-manager**](https://github.com/leeovery/claude-manager) — The plugin manager that powers skill installation
+- [**@leeovery/claude-laravel**](https://github.com/leeovery/claude-laravel) — Laravel development skills for Claude Code
+- [**@leeovery/claude-technical-workflows**](https://github.com/leeovery/claude-technical-workflows) — Technical workflow skills for Claude Code
 
 ## License
 
