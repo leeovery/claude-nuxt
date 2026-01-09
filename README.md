@@ -39,11 +39,15 @@ npm install -D @leeovery/claude-nuxt
 
 ### pnpm
 
+pnpm doesn't expose binaries from transitive dependencies, so install the manager directly:
+
 ```bash
-pnpm add -D --allow-build=@leeovery/claude-nuxt @leeovery/claude-nuxt
+pnpm add -D @leeovery/claude-manager @leeovery/claude-nuxt
+pnpm approve-builds  # approve when prompted
+pnpm install         # triggers postinstall
 ```
 
-### Removal (pnpm only)
+**Removal (pnpm):**
 
 ```bash
 npx claude-plugins remove @leeovery/claude-nuxt && pnpm remove @leeovery/claude-nuxt
