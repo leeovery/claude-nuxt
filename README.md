@@ -50,7 +50,7 @@ pnpm install         # triggers postinstall
 **Removal (pnpm):**
 
 ```bash
-npx claude-plugins remove @leeovery/claude-nuxt && pnpm remove @leeovery/claude-nuxt
+npx claude-manager remove @leeovery/claude-nuxt && pnpm remove @leeovery/claude-nuxt
 ```
 
 The [Claude Manager](https://github.com/leeovery/claude-manager) copies skills to `.claude/` automatically.
