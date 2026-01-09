@@ -31,11 +31,25 @@ This is a curated collection of Nuxt 4 + Vue 3 development patterns refined acro
 
 ## Installation
 
+### npm / yarn
+
 ```bash
 npm install @leeovery/claude-nuxt
 ```
 
-That's it. The [Claude Manager](https://github.com/leeovery/claude-manager) handles everything else automatically.
+### pnpm
+
+```bash
+pnpm add --allow-build=@leeovery/claude-nuxt @leeovery/claude-nuxt
+```
+
+### Removal (pnpm only)
+
+```bash
+npx claude-plugins remove @leeovery/claude-nuxt && pnpm remove @leeovery/claude-nuxt
+```
+
+The [Claude Manager](https://github.com/leeovery/claude-manager) copies skills to `.claude/` automatically.
 
 ## How It Works
 
