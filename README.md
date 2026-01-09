@@ -16,10 +16,10 @@
 
 ## Versions
 
-| Version | Package Manager | Status | Branch |
-|---------|----------------|--------|--------|
-| 2.x | npm | **Active** | `main` |
-| 1.x | Composer | Deprecated | [`v1`](https://github.com/leeovery/claude-nuxt/tree/v1) |
+| Version | Package Manager | Status     | Branch                                                  |
+|---------|-----------------|------------|---------------------------------------------------------|
+| 2.x     | npm             | **Active** | `main`                                                  |
+| 1.x     | Composer        | Deprecated | [`v1`](https://github.com/leeovery/claude-nuxt/tree/v1) |
 
 ## About
 
@@ -31,16 +31,16 @@ This is a curated collection of Nuxt 4 + Vue 3 development patterns refined acro
 
 ## Installation
 
-### npm / yarn
+### npm
 
 ```bash
-npm install @leeovery/claude-nuxt
+npm install -D @leeovery/claude-nuxt
 ```
 
 ### pnpm
 
 ```bash
-pnpm add --allow-build=@leeovery/claude-nuxt @leeovery/claude-nuxt
+pnpm add -D --allow-build=@leeovery/claude-nuxt @leeovery/claude-nuxt
 ```
 
 ### Removal (pnpm only)
