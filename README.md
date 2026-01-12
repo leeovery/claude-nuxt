@@ -5,13 +5,23 @@
 </p>
 
 <p align="center">
-  <a href="#about">About</a> •
+  <a href="#what-is-this">What is this?</a> •
   <a href="#skills">Skills</a> •
   <a href="#installation">Installation</a> •
   <a href="#contributing">Contributing</a>
 </p>
 
 ---
+
+## What is this?
+
+A curated collection of Nuxt 4 + Vue 3 development patterns refined across multiple production applications in the Fabric ecosystem.
+
+**These are opinionated.** They represent a domain-driven, type-safe, composable-first architecture—featuring the feature module pattern (queries/mutations/actions), model hydration with casting, and a clear separation between data and presentation layers. They won't be for everyone, and that's okay.
+
+**This is a work in progress.** As I use these skills in real projects, I'm continuously refining them to better represent how I actually work. Expect updates as patterns evolve and edge cases reveal themselves.
+
+**Model compatibility:** These skills have been developed and refined for Claude Code running on **Opus 4.5**. Different models may exhibit different edge cases, and future model releases may require adjustments to the prompts and workflows.
 
 ### Quick Install
 
@@ -27,18 +37,6 @@ npm install -D @leeovery/claude-nuxt
 ```
 
 See [Installation](#installation) for details and trade-offs.
-
----
-
-## About
-
-This is a curated collection of Nuxt 4 + Vue 3 development patterns refined across multiple production applications in the Fabric ecosystem.
-
-**These are opinionated.** They represent a domain-driven, type-safe, composable-first architecture—featuring the feature module pattern (queries/mutations/actions), model hydration with casting, and a clear separation between data and presentation layers. They won't be for everyone, and that's okay.
-
-**This is a work in progress.** As I use these skills in real projects, I'm continuously refining them to better represent how I actually work. Expect updates as patterns evolve and edge cases reveal themselves.
-
-**Model compatibility:** These skills have been developed and refined for Claude Code running on **Opus 4.5**. Different models may exhibit different edge cases, and future model releases may require adjustments to the prompts and workflows.
 
 ## Installation
 
