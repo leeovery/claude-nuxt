@@ -1,12 +1,9 @@
 {
-  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "claude-nuxt",
   "description": "Opinionated Nuxt 4 + Vue 3 development patterns",
   "version": "2.0.0",
   "author": {
     "name": "Lee Overy",
     "email": "me@leeovery.com"
-  },
-  "category": "development",
-  "homepage": "https://github.com/leeovery/claude-nuxt"
+  }
 }
